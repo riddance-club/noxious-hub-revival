@@ -405,8 +405,8 @@ return {
             "disableclickdive, dcdive - disables click to dive"
         },
         ["Scripts"]={
-            "riddancescript, riddance - opens Riddance Club's dandy's world script"
-            "boxtensexguiscript, bsgui - opens Noxious's Boxten Sex GUI dandy's world script"
+            "riddancescript, riddance - opens Riddance Club's dandy's world script",
+            "boxtensexguiscript, bsgui - opens Noxious's Boxten Sex GUI dandy's world script",
             " ",
             "bacondwscript, bacon - opens Bac0nH1ckOff's dandy's world script",
             "gobbydwscript, gobby - opens G0bbyD0llan57's dandy's world script",
