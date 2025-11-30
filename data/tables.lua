@@ -1,4 +1,4 @@
-local bsguidata = loadstring(game:HttpGet("https://github.com/Boxten-Keyes/bandana/blob/main/bandana%23%5Bdata%5D/bandana%23%5Bboxten%20sex%20gui%5D.lua"))()
+local bsguidata = loadstring(game:HttpGet("https://raw.githubusercontent.com/Boxten-Keyes/bandana/refs/heads/main/bandana%23%5Bdata%5D/bandana%23%5Bboxten%20sex%20gui%5D.lua"))()
 return {
     commands = {
         ["Main"]={
