@@ -5,7 +5,7 @@
   \ \_\\"\_\  \ \_____\   /\_\/\_\  \ \_\  \ \_____\  \ \_____\  \/\_____\ 
    \/_/ \/_/   \/_____/   \/_/\/_/   \/_/   \/_____/   \/_____/   \/_____/
    
-   Made by Team Noxious and Plethora, revived and fixed by Riddance Club -- Dandy's World [Version Revival]   
+   Made by Team Noxious and Plethora, revived by Riddance Club -- Dandy's World [Version Revival]   
 
 ---------------------------------------------------------------------------------------------------------------------------]]--
 
@@ -379,11 +379,11 @@ function closeAllNotifications()
 end
 
 spawn(function()
-	notify("hello welcome to the unofficial revival of noxious hub and open sourced thing", 5)
+	notify("hello welcome to the unofficial revival of noxious hub and open sourced thing", 7.5)
 	task.wait(1.5)
-	notify("this is very still based on 7.7.1 and probably broken as nothing was really changed", 5)
+	notify("this is very still based on 7.7.1 and probably broken as nothing was really changed", 7.5)
 	task.wait(1.5)
-	notify("hopefully you still like it and can report issues to the bookclub discord", 5)
+	notify("hopefully you still like it and can report issues to the bookclub discord", 7.5)
 end)
 
 -------------------------------------------------------------------------------------------------------------------------------
