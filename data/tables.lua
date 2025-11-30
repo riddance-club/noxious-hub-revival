@@ -312,8 +312,6 @@ return {
             "hjump [target] - jump on specified target's head",
             "unhjump - stop jumping on specified target's head",
             " ",
-            "fliptools, ft - gives you backflip and frontflip tools",
-            " ",
             "fly [speed] - makes you fly",
             "unfly - stop flying",
             "spin [speed] - makes you spin",
