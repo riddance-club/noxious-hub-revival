@@ -433,10 +433,11 @@ return {
         "------------------------------ What's new? (Version " .. ver .. "): ------------------------------",
         " ",
         "Command updates:",
-        "- Added 1 'Placeholder' command. (placeholder)",
+        "- Added 2 'Local Player' commands. (enableloopmaxspeed, disableloopmaxspeed)",
+        "- Removed some commands that were patched ages ago.",
         " ",
         "Other:",
-        "- Adjusted placeholder functionality.",
+        "- Fixed and optimised overall functionality.",
         "--------------------------------------------------------------------------------------------",
     },
     information = {
