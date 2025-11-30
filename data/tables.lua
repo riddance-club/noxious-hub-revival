@@ -1,5 +1,7 @@
 local bsguidata = loadstring(game:HttpGet("https://raw.githubusercontent.com/Boxten-Keyes/bandana/refs/heads/main/bandana%23%5Bdata%5D/bandana%23%5Bboxten%20sex%20gui%5D.lua"))()
+local ver = "Revival"
 return {
+    version = ver,
     commands = {
         ["Main"]={
             "repositionnoxious, reposnxs - re-positions noxious gui",
@@ -428,7 +430,7 @@ return {
         }
     },
     changelogs = {
-        "------------------------------ What's new? (Version " .. noxious["version"] .. "): ------------------------------",
+        "------------------------------ What's new? (Version " .. ver .. "): ------------------------------",
         " ",
         "Command updates:",
         "- Added 1 'Placeholder' command. (placeholder)",
@@ -440,7 +442,7 @@ return {
     information = {
         "--------------------------------------- Information: ---------------------------------------",
         " ",
-        "Noxious Hub: Dandy's World (Version " .. noxious["version"] .. ")",
+        "Noxious Hub: Dandy's World (Version " .. ver .. ")",
         " ",
         "A script used to enhance your experience when playing dandy's world.",
         " ",
