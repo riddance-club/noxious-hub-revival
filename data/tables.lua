@@ -570,7 +570,7 @@ return {
         " ",
         "--------------------------------------------------------------------------------------------",
     },
-    toons = bsgui.alltoons,
-    unoptimized = bsgui.unoptimized,
-    animations = bsgui.animations
+    toons = bsguidata.alltoons,
+    unoptimized = bsguidata.unoptimized,
+    animations = bsguidata.animations
 }
