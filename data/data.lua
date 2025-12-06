@@ -438,7 +438,7 @@ for category, commands in pairs(config.commands) do
     end
 end
 config.changelogs = {
-    "------------------------------ What's new since 7.7.1? (Version " .. config.version .. "): ------------------------------",
+    "What's new since 7.7.1? (Version " .. config.version .. "):",
     " ",
     "Command updates:",
     "- Added 2 'Main' commands. (noxiousgithub, riddancediscord)",
@@ -447,11 +447,10 @@ config.changelogs = {
     " ",
     "Other:",
     "- Fixed and optimised overall functionality.",
-    "- Added command count to information.",
-    "-------------------------------------------------------------------------------------------------------",
+    "- Added command count to information."
 }
 config.information = {
-    "--------------------------------------- Information: ---------------------------------------",
+    "Information:",
     " ",
     "Noxious Hub: Dandy's World (Version " .. config.version .. ")",
     "Currently there are " .. config.commandcount .. " commands.",
@@ -472,13 +471,13 @@ config.information = {
     "Press the toggle button to toggle the visibility of the interface.",
     "Press X on your keyboard to close all notifications.",
     " ",
-    "-------------------- Toon names (For commands, like faketooncard.): --------------------",
+    "Toon names (For commands, like faketooncard.):",
     " ",
     "'Pebble', 'Pebbles' = Pebble",
     "'RazzleAndDazzle', 'RazzleDazzle', 'RND' = Razzle & Dazzle",
     "Everything else is exactly as what their name is.",
     " ",
-    "--------------------------------------- Arguments: ---------------------------------------",
+    "Arguments:",
     " ",
     "[target] = A target from the player arguments",
     "[target 1] [target 2] = Command will run on target 1 and will affect target 2",
@@ -489,7 +488,7 @@ config.information = {
     "[text] = Inputted text will run on the command",
     "[toon name] = A Toon from the Toon names",
     " ",
-    "---------- Player arguments (For commands, like the Fun / Trolls commands.): ----------",
+    "Player arguments (For commands, like the Fun / Trolls commands.):",
     " ",
     "'Me' = Targets you",
     "'Others' = Targets everyone but you (Ineffective for certain commands.)",
@@ -497,7 +496,7 @@ config.information = {
     "'Random' = Targets a random player in the server",
     "'(Username)' = Targets the specified username",
     " ",
-    "--------- Color arguments (For commands, like the ghostcharacter command.): ---------",
+    "Color arguments (For commands, like the ghostcharacter command.):",
     " ",
     "'Red', 'R' = Red color",
     "'Orange', 'O' = Orange color",
@@ -512,20 +511,16 @@ config.information = {
     "'Gray', 'GY' = Gray color",
     "'Black', 'BK' = Black color",
     "'Rainbow', 'RB' = Dynamic rainbow",
-    " ",
-    "--------------------------------------------------------------------------------------------",
 }
 config.workspaceinfo = {
-    "------------------------------ Information (Workspace.Info): ------------------------------",
+    "Information (Workspace.Info):",
     " ",
     "'Info' Folder not found.",
-    " ",
-    "--------------------------------------------------------------------------------------------",
 }
 config.credits = {
-    "---------------------------------- Riddance Club: -----------------------------------",
+    "Riddance Club:",
     "olivia - Scripting, bug fixing, open sourcing, reviving the original code",
-    "--------------------------------- Team Noxious & Others: ---------------------------------",
+    "Team Noxious & Others:",
     " ",
     "unable & Plethora - Scripting, UI designing",
     "dextrocities & Colton - Scripting, bug fixing",
@@ -534,7 +529,7 @@ config.credits = {
     "Lexia & uwusploit - UI designing",
     "Ace, IwwegalSubstances & Noxious Script Testers - Testing",
     " ",
-    "------------------------------ Additional thanks / credits to: ------------------------------",
+    "Additional thanks / credits to:",
     " ",
     "Rode Striker - For 'Glisten's Animation Closet' and 'The Dandy Helper' Scripts",
     "ApparentlySpooks & Mox - For 'MoxHub' and 'Spooks Hub' Scripts",
@@ -552,7 +547,6 @@ config.credits = {
     "FFJ - For 'Dandys | FFJ Hub' Script",
     "jaonoobao - For 'Poltergeist Hub' Script",
     " ",
-    "--------------------------------------------------------------------------------------------",
 }
 config.toons = bsguidata.alltoons
 config.unoptimized = bsguidata.unoptimized
