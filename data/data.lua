@@ -520,8 +520,8 @@ config.workspaceinfo = {
 config.credits = {
     "Riddance Club:",
     "olivia - Scripting, bug fixing, open sourcing, reviving the original code",
-    "Team Noxious & Others:",
     " ",
+    "Team Noxious & Others:",
     "unable & Plethora - Scripting, UI designing",
     "dextrocities & Colton - Scripting, bug fixing",
     "hypno, ethereal, & SpecialsUnicodeBlock - Scripting",
@@ -530,7 +530,6 @@ config.credits = {
     "Ace, IwwegalSubstances & Noxious Script Testers - Testing",
     " ",
     "Additional thanks / credits to:",
-    " ",
     "Rode Striker - For 'Glisten's Animation Closet' and 'The Dandy Helper' Scripts",
     "ApparentlySpooks & Mox - For 'MoxHub' and 'Spooks Hub' Scripts",
     "Otvajni - For 'Fly REBORN' and 'EgasHub' Scripts",
@@ -546,7 +545,6 @@ config.credits = {
     "@gigi_hilton on Discord - Gigi & Shelly Valentines Skins & Twisted Poppy Skin",
     "FFJ - For 'Dandys | FFJ Hub' Script",
     "jaonoobao - For 'Poltergeist Hub' Script",
-    " ",
 }
 config.toons = bsguidata.alltoons
 config.unoptimized = bsguidata.unoptimized
