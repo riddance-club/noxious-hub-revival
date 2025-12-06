@@ -113,10 +113,10 @@ local function notify(message, duration, variant)
 	local textColor = noxious["default white color"]
 	local timerframecolor = noxious["default white color"]
 	local playbackspeed = 1
-	local topframetext = "Notify / Noxious Hub: dandy's world"
+	local topframetext = "Notify / Noxious Hub: Dandy's World"
 
 	if variant == "qwelverishere" then
-		topframetext = "Special / Noxious Hub: dandy's world"
+		topframetext = "Special / Noxious Hub: Dandy's World"
 		borderColor = Color3.new(1, 0.4, 1)
 		textColor = Color3.new(1, 0.4, 1)
 		timerframecolor = Color3.new(1, 0.4, 1)
@@ -132,7 +132,7 @@ local function notify(message, duration, variant)
 	if variant == "error" then
 		borderColor = Color3.new(1, 0.3, 0.3)
 		textColor = Color3.new(1, 0.3, 0.3)
-		topframetext = "Error / Noxious Hub: dandy's world"
+		topframetext = "Error / Noxious Hub: Dandy's World"
 		timerframecolor = Color3.new(1, 0.3, 0.3)
 		notifsound.SoundId = noxious["error sound"]
 		notifsound.Volume = 1.6
@@ -142,7 +142,7 @@ local function notify(message, duration, variant)
 
 	if variant == "warning" then
 		borderColor = Color3.new(1, 1, 0.4)
-		topframetext = "Warning / Noxious Hub: dandy's world"
+		topframetext = "Warning / Noxious Hub: Dandy's World"
 		textColor = Color3.new(1, 1, 0.4)
 		timerframecolor = Color3.new(1, 1, 0.4)
 		notifsound.SoundId = noxious["warning sound"]
@@ -690,7 +690,7 @@ noxious["bottom frame title"].TextColor3 = noxious["default white color"]
 noxious["bottom frame title"].Font = Enum.Font.Nunito
 noxious["bottom frame title"].TextSize = 21.6
 noxious["bottom frame title"].TextScaled = false
-noxious["bottom frame title"].Text = "Noxious hub: dandy's world"
+noxious["bottom frame title"].Text = "Noxious Hub: Dandy's World"
 noxious["bottom frame title"].TextXAlignment = Enum.TextXAlignment.Right
 noxious["bottom frame title"].Parent = noxious["bottom frame"]
 
@@ -1688,7 +1688,7 @@ function populateinfo()
 		end
 
 		-- Header and separator lines
-		addLine("------------------------------ Information (Workspace.Info): ------------------------------")
+		addLine("Information (Workspace.Info):")
 		addLine(" ")
 
 		-- Add values from the Info folder, excluding certain names
@@ -2118,7 +2118,7 @@ noxious["bottom frame title"].TextColor3 = noxious["default white color"]
 noxious["bottom frame title"].Font = Enum.Font.Nunito
 noxious["bottom frame title"].TextSize = 21.6
 noxious["bottom frame title"].TextScaled = false
-noxious["bottom frame title"].Text = "Noxious hub: dandy's world"
+noxious["bottom frame title"].Text = "Noxious Hub: Dandy's World"
 noxious["bottom frame title"].TextXAlignment = Enum.TextXAlignment.Right
 noxious["bottom frame title"].Parent = noxious["bottom frame"]
 
@@ -2269,7 +2269,7 @@ noxious["bottom frame title 2"].TextColor3 = noxious["default white color"]
 noxious["bottom frame title 2"].Font = Enum.Font.Nunito
 noxious["bottom frame title 2"].TextSize = 21.6
 noxious["bottom frame title 2"].TextScaled = false
-noxious["bottom frame title 2"].Text = "Noxious hub: dandy's world"
+noxious["bottom frame title 2"].Text = "Noxious Hub: Dandy's World"
 noxious["bottom frame title 2"].TextXAlignment = Enum.TextXAlignment.Right
 noxious["bottom frame title 2"].Parent = noxious["bottom frame 2"]
 
@@ -3496,7 +3496,7 @@ function intro()
 	local messages = {
 		"If you're in a run and some of the commands / scripts don't work, try executing them AFTER floor 1.",
 		"Team Noxious was founded by unable in 2022.",
-		"We started scripting Noxious Hub: dandy's world in September 14th, 2024.",
+		"We started scripting Noxious Hub: Dandy's World in September 14th, 2024.",
 		"Ace is unable's little sister. We recruited her into the team because she wanted to.",
 		"Think you've discovered a bug? Report it to @Noxious on ScriptBlox.",
 		"Team Noxious consists of 11 people. Plethora is unable's friend, but he isn't a part of the team.",
@@ -3572,7 +3572,7 @@ function intro()
 	textLabel2.Parent = screenGui
 	textLabel2.Size = UDim2.new(0, frameWidth, 0, 40)
 	textLabel2.Position = UDim2.new(0, centerX, 0, centerY + 65)
-	textLabel2.Text = "Noxious Hub: dandy's world - Loading Assets..."
+	textLabel2.Text = "Noxious Hub: Dandy's World - Loading Assets..."
 	textLabel2.TextStrokeTransparency = 1
 	textLabel2.TextStrokeColor3 = Color3.new(1,1,1)
 	textLabel2.Font = Enum.Font.Nunito
@@ -3601,7 +3601,6 @@ function intro()
 	textLabel3.Parent = screenGui
 	textLabel3.Size = UDim2.new(0, frameWidth, 0, 40)
 	textLabel3.Position = UDim2.new(0, centerX, 0, centerY + 25)
-	textLabel3.Text = "< ----------------------------                    ---------------------------- >"
 	textLabel3.TextStrokeTransparency = 1
 	textLabel3.TextStrokeColor3 = Color3.new(1,1,1)
 	textLabel3.Font = Enum.Font.Nunito
@@ -3691,7 +3690,7 @@ function intro()
 		if textLocked then return end -- Prevent changes if text is locked
 
 		textLabel2.Text = newText
-		if newText == "Noxious Hub: dandy's world - Successfully loaded." then
+		if newText == "Noxious Hub: Dandy's World - Successfully loaded." then
 			textLocked = true -- Lock the text once it reaches the final value
 		end
 	end
@@ -3703,7 +3702,7 @@ function intro()
 		if gameProcessed then return end -- Ignore if the input is already processed by the game
 		if input.KeyCode == Enum.KeyCode.Q then
 			skipRequested = true
-			setTextLabel2Text"Noxious Hub: dandy's world - Loading sequence skipped."			
+			setTextLabel2Text"Noxious Hub: Dandy's World - Loading sequence skipped."			
 			handleSkipOrComplete()
 			spawn(handleSkipOrComplete) -- Run handleSkipOrComplete asynchronously
 		end
@@ -3712,8 +3711,8 @@ function intro()
 	-- Function to ensure script waits until the correct message is displayed
 	local function waitForCompletion()
 		local targetMessages = {
-			["Noxious Hub: dandy's world - Successfully loaded."] = true,
-			["Noxious Hub: dandy's world - Loading sequence skipped."] = true
+			["Noxious Hub: Dandy's World - Successfully loaded."] = true,
+			["Noxious Hub: Dandy's World - Loading sequence skipped."] = true
 		}
 
 		repeat
@@ -3727,7 +3726,7 @@ function intro()
 	local function handleSkip()
 		if not fadeOutFinished then
 			skipRequested = true
-			setTextLabel2Text"Noxious Hub: dandy's world - Loading sequence skipped."
+			setTextLabel2Text"Noxious Hub: Dandy's World - Loading sequence skipped."
 			spawn(function() fadeOut() end)
 			spawn(handleSkipOrComplete) -- Run handleSkipOrComplete asynchronously
 		end
@@ -3748,13 +3747,13 @@ function intro()
 		fadeIn()
 
 		local messages = {
-			"Noxious Hub: dandy's world - Loading UI...",
-			"Noxious Hub: dandy's world - Loading Commands...",
-			"Noxious Hub: dandy's world - Loading Scripts...",
-			"Noxious Hub: dandy's world - Checking for Character...",
-			"Noxious Hub: dandy's world - Checking Environment...",
-			"Noxious Hub: dandy's world - Checking Place ID...",
-			"Noxious Hub: dandy's world - Validating User...",
+			"Noxious Hub: Dandy's World - Loading UI...",
+			"Noxious Hub: Dandy's World - Loading Commands...",
+			"Noxious Hub: Dandy's World - Loading Scripts...",
+			"Noxious Hub: Dandy's World - Checking for Character...",
+			"Noxious Hub: Dandy's World - Checking Environment...",
+			"Noxious Hub: Dandy's World - Checking Place ID...",
+			"Noxious Hub: Dandy's World - Validating User...",
 		}
 
 		wait(3)
@@ -3767,9 +3766,9 @@ function intro()
 
 		-- Set the final message based on whether skip was requested
 		if skipRequested then
-			setTextLabel2Text"Noxious Hub: dandy's world - Loading sequence skipped."		
+			setTextLabel2Text"Noxious Hub: Dandy's World - Loading sequence skipped."		
 		else
-			setTextLabel2Text"Noxious Hub: dandy's world - Successfully loaded."		
+			setTextLabel2Text"Noxious Hub: Dandy's World - Successfully loaded."		
 		end
 
 		fadeOut()
@@ -4010,7 +4009,7 @@ function developernote()
 	messagetopframetxt.Font = Enum.Font.Nunito
 	messagetopframetxt.TextSize = 21.6
 	messagetopframetxt.TextScaled = false
-	messagetopframetxt.Text = "Message / Noxious Hub: dandy's world"
+	messagetopframetxt.Text = "Message / Noxious Hub: Dandy's World"
 	messagetopframetxt.TextXAlignment = Enum.TextXAlignment.Left
 	messagetopframetxt.Parent = topframe
 
@@ -4049,7 +4048,7 @@ noxious["user input service"].InputBegan:Connect(closeallnotificationswithkey)
 print("---------------------------------------------------------------------------")	
 print("[Noxious Hub]: Thank you for choosing us!")	
 print("---------------------------------------------------------------------------")	
-print("[Noxious Hub]: Welcome to Noxious Hub: dandy's world"	)
+print("[Noxious Hub]: Welcome to Noxious Hub: Dandy's World"	)
 print("[Noxious Hub]: Script is still in development. Expect bugs."	)
 print("---------------------------------------------------------------------------")	
 print("[Noxious Hub]: Current version: " .. noxious["version"])
