@@ -447,7 +447,7 @@ config.changelogs = {
     " ",
     "Other:",
     "- Fixed and optimised overall functionality.",
-    "- Added command count to information."
+    "- Added command count to information.",
     "-------------------------------------------------------------------------------------------------------",
 }
 config.information = {
