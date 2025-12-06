@@ -441,7 +441,7 @@ config.changelogs = {
     "------------------------------ What's new since 7.7.1? (Version " .. config.version .. "): ------------------------------",
     " ",
     "Command updates:",
-    "- Added 2 'Main' commands. (noxiousgithub, riddancediscord)"
+    "- Added 2 'Main' commands. (noxiousgithub, riddancediscord)",
     "- Added 2 'Local Player' commands. (enableloopmaxspeed, disableloopmaxspeed)",
     "- Removed some commands that were patched ages ago.",
     " ",
