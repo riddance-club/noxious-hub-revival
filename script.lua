@@ -702,7 +702,7 @@ noxious["bottom frame subtitle"].TextColor3 = noxious["default gray color"]
 noxious["bottom frame subtitle"].Font = Enum.Font.Nunito
 noxious["bottom frame subtitle"].TextSize = 18
 noxious["bottom frame subtitle"].TextScaled = false
-noxious["bottom frame subtitle"].Text = "By Team Noxious & Plethora"
+noxious["bottom frame subtitle"].Text = "By Team Noxious, Plethora & Riddance Club"
 noxious["bottom frame subtitle"].TextXAlignment = Enum.TextXAlignment.Right
 noxious["bottom frame subtitle"].Parent = noxious["bottom frame"]
 
