@@ -355,6 +355,16 @@ local function notify(message, duration, variant)
 	notifframe.ZIndex = 37
 end
 
+local everyClipboard = setclipboard or toclipboard or set_clipboard or (Clipboard and Clipboard.set)
+function toClipboard(txt)
+	if everyClipboard then
+		everyClipboard(tostring(txt))
+		notify("Copied to clipboard.", 5)
+	else
+		notify("Unable to access clipboard.", 5, "error")
+	end
+end
+
 function closeAllNotifications()
 	-- Iterate through all active notifications
 	for _, frame in ipairs(noxious["active notifications"]) do
@@ -381,9 +391,11 @@ end
 spawn(function()
 	notify("hello welcome to the unofficial revival of noxious hub and open sourced thing", 7.5)
 	task.wait(1.5)
-	notify("this is very still based on 7.7.1 and probably broken as nothing was really changed", 7.5)
+	notify("this is very still based on 7.7.1 and probably broken as nothing was really changed besides what is shown in changelogs", 7.5)
 	task.wait(1.5)
-	notify("hopefully you still like it and can report issues to the bookclub discord", 7.5)
+	notify("hopefully you still like it and can report issues or give suggestions to the bookclub discord", 7.5)
+	task.wait(1.5)
+	notify("if you are also someone who can code well please consider submitting some of your own wanted fixes/features to this", 7.5)
 end)
 
 -------------------------------------------------------------------------------------------------------------------------------
@@ -740,6 +752,10 @@ end
 
 function closenoxious()
 	mainframe.Visible = not mainframe.Visible
+end
+
+function noxiousgithub()
+	toClipboard"https://github.com/riddance-club/noxious-hub-revival"
 end
 
 noxious["reposition interface button"].MouseButton1Click:Connect(
@@ -9090,86 +9106,26 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function copydandybinlink()
-	local everyClipboard = setclipboard or toclipboard or set_clipboard or (Clipboard and Clipboard.set)
-
-	function toClipboard(txt)
-		if everyClipboard then
-			everyClipboard(tostring(txt))
-			notify("Copied to clipboard.", 5)
-		else
-			notify("Unable to access clipboard.", 5, "error")
-		end
-	end
 	toClipboard"https://discord.com/invite/dandysworldexploits"	
 end
 
 function copyzyralink()
-	local everyClipboard = setclipboard or toclipboard or set_clipboard or (Clipboard and Clipboard.set)
-
-	function toClipboard(txt)
-		if everyClipboard then
-			everyClipboard(tostring(txt))
-			notify("Copied to clipboard.", 5)
-		else
-			notify("Unable to access clipboard.", 5, "error")
-		end
-	end
 	toClipboard"https://discord.gg/QnkQ9q4P"	
 end
 
 function copybclink()
-	local everyClipboard = setclipboard or toclipboard or set_clipboard or (Clipboard and Clipboard.set)
-
-	function toClipboard(txt)
-		if everyClipboard then
-			everyClipboard(tostring(txt))
-			notify("Copied to clipboard.", 5)
-		else
-			notify("Unable to access clipboard.", 5, "error")
-		end
-	end
 	toClipboard"https://discord.gg/blushcrunch"	
 end
 
 function copybklink()
-	local everyClipboard = setclipboard or toclipboard or set_clipboard or (Clipboard and Clipboard.set)
-
-	function toClipboard(txt)
-		if everyClipboard then
-			everyClipboard(tostring(txt))
-			notify("Copied to clipboard.", 5)
-		else
-			notify("Unable to access clipboard.", 5, "error")
-		end
-	end
 	toClipboard"https://discord.gg/hbHEv8QvE9"	
 end
 
 function copynoxiouslink()
-	local everyClipboard = setclipboard or toclipboard or set_clipboard or (Clipboard and Clipboard.set)
-
-	function toClipboard(txt)
-		if everyClipboard then
-			everyClipboard(tostring(txt))
-			notify("Copied to clipboard.", 5)
-		else
-			notify("Unable to access clipboard.", 5, "error")
-		end
-	end
 	toClipboard"https://discord.gg/p63HPpj5G4"	
 end
 
 function copygobbylink()
-	local everyClipboard = setclipboard or toclipboard or set_clipboard or (Clipboard and Clipboard.set)
-
-	function toClipboard(txt)
-		if everyClipboard then
-			everyClipboard(tostring(txt))
-			notify("Copied to clipboard.", 5)
-		else
-			notify("Unable to access clipboard.", 5, "error")
-		end
-	end
 	toClipboard"https://discord.gg/acwaBYnSJM"	
 end
 
@@ -11934,6 +11890,9 @@ function handlecommands(command)
 		-- reposition gui
 	elseif lwr == "reposnxs" or lwr == "repositionnoxious" then
 		repositionnoxious()
+		
+	elseif lwr == "noxiousgithub" or lwr == "gitnxs" then
+		noxiousgithub()
 
 		-- open console
 	elseif lwr == "openconsole" or lwr == "console" then

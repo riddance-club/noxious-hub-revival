@@ -6,6 +6,7 @@ config.commands = {
         "repositionnoxious, reposnxs - re-positions noxious gui",
         "hidenoxious, hidenxs - hides noxious gui",
         "destroynoxious, destroynxs - destroys noxious gui",
+        "noxiousgithub, gitnxs - copies the link to the source code of noxious hub revival on github",
         " ",
         "enablemobiletapindicators, emti - enables tap indicators for mobile",
         "disablemobiletapindicators, dmti - enables tap indicators for mobile",
@@ -428,21 +429,32 @@ config.commands = {
         "explorer, dex - opens Dark Dex",
     }
 }
+config.commandcount = 0
+for category, commands in pairs(config.commands) do
+    for _, command in ipairs(commands) do
+        if command ~= " " then
+            config.commandcount += 1
+        end
+    end
+end
 config.changelogs = {
-    "------------------------------ What's new? (Version " .. config.version .. "): -------------------------------------------------",
+    "------------------------------ What's new since 7.7.1? (Version " .. config.version .. "): ------------------------------",
     " ",
     "Command updates:",
+    "- Added 2 'Main' commands. (noxiousgithub, riddancediscord)"
     "- Added 2 'Local Player' commands. (enableloopmaxspeed, disableloopmaxspeed)",
     "- Removed some commands that were patched ages ago.",
     " ",
     "Other:",
     "- Fixed and optimised overall functionality.",
+    "- Added command count to information."
     "-------------------------------------------------------------------------------------------------------",
 }
 config.information = {
     "--------------------------------------- Information: ---------------------------------------",
     " ",
     "Noxious Hub: Dandy's World (Version " .. config.version .. ")",
+    "Currently there are " .. config.commandcount .. " commands.",
     " ",
     "A script used to enhance your experience when playing dandy's world.",
     " ",
