@@ -31,6 +31,9 @@ noxious["players"] = game:GetService("Players")
 noxious["replicated storage"] = game:GetService("ReplicatedStorage")
 noxious["starter gui"] = game:GetService("StarterGui")
 noxious["virtual input manager"] = game:GetService("VirtualInputManager")
+noxious["lighting"] = game:GetService("Lighting")
+noxious["text chat service"] = game:GetService("TextChatService")
+noxious["teleport service"] = game:GetService("TeleportService")
 
 -- usually these were all over the code randomly but i dumped them into this file so i can easily update and find them
 noxious["data"] = loadstring(game:HttpGet("https://raw.githubusercontent.com/riddance-club/noxious-hub-revival/refs/heads/main/data/data.lua"))()
@@ -4166,13 +4169,12 @@ end
 
 function boostfps()
 	local Terrain = workspace:FindFirstChildOfClass('Terrain')
-	local Lighting = game:GetService("Lighting")
 	Terrain.WaterWaveSize = 0
 	Terrain.WaterWaveSpeed = 0
 	Terrain.WaterReflectance = 0
 	Terrain.WaterTransparency = 0
-	Lighting.GlobalShadows = false
-	Lighting.FogEnd = 9e9
+	noxious["lighting"].GlobalShadows = false
+	noxious["lighting"].FogEnd = 9e9
 	settings().Rendering.QualityLevel = 1
 	for i,v in pairs(game:GetDescendants()) do
 		if v:IsA("Part") or v:IsA("UnionOperation") or v:IsA("MeshPart") or v:IsA("CornerWedgePart") or v:IsA("TrussPart") then
@@ -4187,7 +4189,7 @@ function boostfps()
 			v.BlastRadius = 1
 		end
 	end
-	for i,v in pairs(Lighting:GetDescendants()) do
+	for i,v in pairs(noxious["lighting"]:GetDescendants()) do
 		if v:IsA("BlurEffect") or v:IsA("SunRaysEffect") or v:IsA("ColorCorrectionEffect") or v:IsA("BloomEffect") or v:IsA("DepthOfFieldEffect") then
 			v.Enabled = false
 		end
@@ -8208,9 +8210,7 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function openconsole()
-	local ChatService = game:GetService"TextChatService"		
-	local channel = ChatService.TextChannels:FindFirstChild"RBXGeneral"
-
+	local channel = noxious["text chat service"].TextChannels:FindFirstChild"RBXGeneral"
 	if channel then
 		channel:SendAsync"/console"		
 	end
@@ -8250,21 +8250,15 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function joinlobby()
-	local TeleportService = game:GetService"TeleportService"
-
-	TeleportService:Teleport(noxious["dandy's world lobby"], noxious["local player"])
+	noxious["teleport service"]:Teleport(noxious["dandy's world lobby"], noxious["local player"])
 end
 
 function joinrpserver()
-	local TeleportService = game:GetService"TeleportService"
-
-	TeleportService:Teleport(noxious["dandy's world roleplay server"], noxious["local player"])
+	noxious["teleport service"]:Teleport(noxious["dandy's world roleplay server"], noxious["local player"])
 end
 
 function attemptjoinrun()
-	local TeleportService = game:GetService"TeleportService"
-
-	TeleportService:Teleport(noxious["dandy's world run"], noxious["local player"])
+	noxious["teleport service"]:Teleport(noxious["dandy's world run"], noxious["local player"])
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
@@ -9089,8 +9083,7 @@ local chatnotifiedPlayers = {} -- Table to track players already chatted about
 
 -- Helper function to chat the low health message
 function lowhealthchatguiding(username, characterName)
-	local ChatService = game:GetService("TextChatService")
-	local channel = ChatService.TextChannels:FindFirstChild("RBXGeneral")
+	local channel = noxious["text chat service"].TextChannels:FindFirstChild("RBXGeneral")
 	if channel then
 		channel:SendAsync(username .. " (" .. characterName .. ") is at 1 heart.")
 	end
@@ -9196,8 +9189,7 @@ local playerCharacterNames = {} -- Table to track the saved character names for 
 
 -- Helper function to chat the player removal message
 function deadchatguiding(username, characterName)
-	local ChatService = game:GetService("TextChatService")
-	local channel = ChatService.TextChannels:FindFirstChild("RBXGeneral")
+	local channel = noxious["text chat service"].TextChannels:FindFirstChild("RBXGeneral")
 	if channel then
 		channel:SendAsync(username .. " (" .. characterName .. ") died or left the game.")
 	end
@@ -9358,11 +9350,6 @@ local modelGenerationCooldown = 0.5 -- Time threshold in seconds (0.5 seconds)
 
 -- Function to start monitoring Twisteds
 function startTwistedsNotifyLoop()
-	local ChatService = game:GetService("TextChatService")
-	local currentRoom = workspace:FindFirstChild("CurrentRoom")
-	if not currentRoom then return end
-
-	-- Loop to check for Twisteds
 	while notifyTwistedsEnabled do
 		local newTwisteds = {} -- Store new Twisteds for this cycle
 		local totalMonsters = 0 -- Count the total number of monsters
@@ -9374,8 +9361,7 @@ function startTwistedsNotifyLoop()
 			twistedsMessageSent = false -- Reset the message sent flag
 		else
 			-- Collect all Twisteds
-			for _, model in ipairs(currentRoom:GetChildren()) do
-				if model:IsA("Model") then
+			if getMap()
 					local monstersFolder = getMap():FindFirstChild("Monsters")
 					if monstersFolder then
 						for _, monster in ipairs(monstersFolder:GetChildren()) do
@@ -9393,11 +9379,10 @@ function startTwistedsNotifyLoop()
 					end
 				end
 			end
-		end
 
 		-- If there are more than one monster and the message hasn't been sent yet
 		if totalMonsters > 1 and #newTwisteds > 0 and not twistedsMessageSent then
-			local channel = ChatService.TextChannels:FindFirstChild("RBXGeneral")
+			local channel = noxious["text chat service"].TextChannels:FindFirstChild("RBXGeneral")
 			if channel then
 				-- Send the list of new Twisteds only once
 				wait(0.5)
@@ -9566,8 +9551,7 @@ function startChatItemsLoop()
 
 	-- Start the loop to check for items
 	while chatItemsLoopEnabled do
-		for _, model in ipairs(currentRoom:GetChildren()) do
-			if model:IsA("Model") then
+		if getMap()
 				local itemsFolder = getMap():FindFirstChild("Items")
 				if itemsFolder then
 					local itemsFound = {}
@@ -9581,8 +9565,7 @@ function startChatItemsLoop()
 
 					-- Chat out detected items
 					if #itemsFound > 0 then
-						local ChatService = game:GetService("TextChatService")
-						local channel = ChatService.TextChannels:FindFirstChild("RBXGeneral")
+						local channel = noxious["text chat service"].TextChannels:FindFirstChild("RBXGeneral")
 						if channel then
 							-- Replace item names based on the mapping (HealthKit -> Medkit)
 							for i, itemName in ipairs(itemsFound) do
@@ -9598,7 +9581,6 @@ function startChatItemsLoop()
 					end
 				end
 			end
-		end
 
 		-- Cleanup items that no longer exist in the room
 		for itemName, _ in pairs(chattedItems) do
@@ -9652,30 +9634,14 @@ end
 
 -- Function to run active ability for a specified target
 function runActiveAbility(targetName)
-	local localPlayer = game:GetService("Players").LocalPlayer
 	local targetPlayer = findPlayer(targetName)
-
 	if not targetPlayer then
 		return
 	end
-
 	if not targetPlayer.Character then
 		return
 	end
-
-	local args = {
-		[1] = localPlayer.Character,
-		[2] = CFrame.new(-85.81144714355469, 146.0568084716797, 4.6407670974731445) 
-			* CFrame.Angles(1.1656561582640279e-07, -0.4113893210887909, -2.73472409162423e-08),
-		[3] = targetPlayer.Character
-	}
-
-	local success, err = pcall(function()
-		noxious["replicated storage"].Events.AbilityEvent:InvokeServer(unpack(args))
-	end)
-
-	if success then
-	end
+	noxious["replicated storage"].Events.AbilityEvent:InvokeServer(noxious["local character"], noxious["local character"]:GetPivot(), targetPlayer.Character)
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
