@@ -62,6 +62,18 @@ noxious["default black color"] = Color3.new(0, 0, 0)
 noxious["local player"] = noxious["players"].LocalPlayer
 noxious["current camera"] = workspace.CurrentCamera
 
+function noxiouslog(...)
+	print("[Noxious Hub]:", ...)
+end
+
+function noxiouswarn(...)
+	warn("[Noxious Hub]:", ...)
+end
+
+function noxiousbigfatborderprint()
+	print("---------------------------------------------------------------------------")
+end
+
 function updateReferences(char)
 	noxious["local character"] = char
 	noxious["local humanoid"] = char:WaitForChild("Humanoid")	
@@ -4111,34 +4123,34 @@ noxious["user input service"].InputBegan:Connect(closeallnotificationswithkey)
 
 -------------------------------------------------------------------------------------------------------------------------------
 
-print("---------------------------------------------------------------------------")	
-print("[Noxious Hub]: Thank you for choosing us!")	
-print("---------------------------------------------------------------------------")	
-print("[Noxious Hub]: Welcome to Noxious Hub: Dandy's World"	)
-print("[Noxious Hub]: Script is still in development. Expect bugs."	)
-print("---------------------------------------------------------------------------")	
-print("[Noxious Hub]: Current version: " .. noxious["version"])
-print("---------------------------------------------------------------------------")
+noxiousbigfatborderprint()	
+noxiouslog("Thank you for choosing us!")	
+noxiousbigfatborderprint()	
+noxiouslog("Welcome to Noxious Hub: Dandy's World"	)
+noxiouslog("Script is still in development. Expect bugs."	)
+noxiousbigfatborderprint()	
+noxiouslog("Current version: " .. noxious["version"])
+noxiousbigfatborderprint()
 
 if game.PlaceId == noxious["dandy's world lobby"] then
-	print("[Noxious Hub]: You are currently in: The lobby.")	
+	noxiouslog("You are currently in: The lobby.")	
 end
 
 if game.PlaceId == noxious["dandy's world run"] then
-	print("[Noxious Hub]: You are currently in: A run.")	
+	noxiouslog("You are currently in: A run.")	
 end
 
 if game.PlaceId == noxious["dandy's world roleplay server"] then
-	print("[Noxious Hub]: You are currently in: A Roleplay Server.")	
+	noxiouslog("You are currently in: A Roleplay Server.")	
 end
 
 if game.PlaceId ~= noxious["dandy's world run"] and game.PlaceId ~= noxious["dandy's world lobby"] and game.PlaceId ~= noxious["dandy's world roleplay server"] then
-	print("[Noxious Hub]: You aren't in dandy's world. You might encounter some issues.")	
+	noxiouslog("You aren't in dandy's world. You might encounter some issues.")	
 end
 
-print("---------------------------------------------------------------------------")	
-print("[Noxious Hub]: Hover over a command to view its info.")	
-print("---------------------------------------------------------------------------")
+noxiousbigfatborderprint()	
+noxiouslog("Hover over a command to view its info.")	
+noxiousbigfatborderprint()
 
 -------------------------------------------------------------------------------------------------------------------------------
 
@@ -10295,6 +10307,8 @@ function handlecommands(command)
 	local args = string.split(command, " ")
 	local lwr = string.lower(command)
 
+	local suc, err = pcall(function()
+
 	if lwr == "enableloopextractinganimation" or lwr == "elea" then
 		enableextractinganimationloop()
 	elseif lwr == "enableloopabilityanimation" or lwr == "elaa" then
@@ -10730,7 +10744,7 @@ function handlecommands(command)
 		offsettwisted(x, z)
 		
 	elseif lwr == "restoretwisted" or lwr == "rt" then
-		restoretwisted()
+		restorebacktwistedpos()
 		-- show all toon cards
 	elseif lwr == "satc" or lwr == "showalltooncards" then
 		showalltooncards()
@@ -11412,6 +11426,11 @@ function handlecommands(command)
 		spawn(function() enablealternativefullbright() end)
 	else
 		notify("Unknown command or invalid arguments.", 5, "error")
+	end
+	end)
+	if not suc then
+		notify("An error has occured with a command. Please check console and report it to Bookclub if a feature is broken.", 5, "error")
+		noxiouswarn(err)
 	end
 end
 
