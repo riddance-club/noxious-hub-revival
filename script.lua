@@ -7497,7 +7497,7 @@ function gatherresearch()
 					if monster.Name == "RazzleDazzleMonster" and not visitedRazzleDazzle then
 						visitedRazzleDazzle = true -- Mark as visited
 						yOffset = 0
-						teleportplr(monster:GetModelCFrame() + Vector3.new(0, yOffset, 0))
+						teleportplr(monster:GetPivot() + Vector3.new(0, yOffset, 0))
 						workspace.Gravity = 196.2									
 						noxious["virtual input manager"]:SendKeyEvent(true, Enum.KeyCode.W, false, game)
 						wait(0.5)
@@ -7505,7 +7505,7 @@ function gatherresearch()
 						workspace.Gravity = 0
 					end
 					if monster.Name ~= "RazzleDazzleMonster" or not visitedRazzleDazzle then
-						teleportplr(monster:GetModelCFrame() + Vector3.new(5, yOffset, 5))
+						teleportplr(monster:GetPivot() + Vector3.new(5, yOffset, 5))
 						task.wait(0.5)
 					end
 				end
@@ -7679,7 +7679,7 @@ function pickupallitems()
 		if itemsFolder and #itemsFolder:GetChildren() > 0 then
 			for _, item in ipairs(itemsFolder:GetChildren()) do
 				if item:IsA("Model") then
-					local itemCFrame = item:GetModelCFrame() * CFrame.new(0, -3.3, 0)
+					local itemCFrame = item:GetPivot() * CFrame.new(0, -3.3, 0)
 					tweenplr(itemCFrame)
 				end
 			end
@@ -7705,28 +7705,19 @@ function pickupallresearchcapsules()
 	spawn(function() enableItemAura() end)
 	spawn(function() bringplayerdown() end)
 	wait(0.2)
+
 	local originalPosition = noxious["local root"].CFrame
-
-	local currentRoom = workspace:FindFirstChild"CurrentRoom"		
-	if currentRoom then
-		for _)) do
-			if model:IsA"Model"then
-				local itemsFolder = getMap():FindFirstChild"Items"					
-				if itemsFolder and #itemsFolder:GetChildren() > 0 then
-					for _, item in ipairs(itemsFolder:GetChildren()) do
-						-- Only pick up items named "ResearchCapsule"
-						if item:IsA"Model"and item.Name == "ResearchCapsule" then
-							local itemCFrame = item:GetModelCFrame() * CFrame.new(0, -3.3, 0)
-
-							tweenplr(itemCFrame)
-
-						end
-					end
+	if getMap() then
+		local itemsFolder = getMap():FindFirstChild("Items")
+		if itemsFolder and #itemsFolder:GetChildren() > 0 then
+			for _, item in ipairs(itemsFolder:GetChildren()) do
+				if item:IsA("Model") and item.Name == "ResearchCapsule" then
+					local itemCFrame = item:GetPivot() * CFrame.new(0, -3.3, 0)
+					tweenplr(itemCFrame)
 				end
 			end
 		end
 	end
-
 	tweenplr(originalPosition)
 
 	task.wait(0.1)
@@ -7753,7 +7744,7 @@ function pickupalltapes()
 		if itemsFolder and #itemsFolder:GetChildren() > 0 then
 			for _, item in ipairs(itemsFolder:GetChildren()) do
 				if item:IsA"Model"and item.Name == "Tape" then
-					local itemCFrame = item:GetModelCFrame() * CFrame.new(0, -3.3, 0)
+					local itemCFrame = item:GetPivot() * CFrame.new(0, -3.3, 0)
 					tweenplr(itemCFrame)
 				end
 			end
@@ -7787,7 +7778,7 @@ function pickupallheals()
 					for _, item in ipairs(itemsFolder:GetChildren()) do
 						-- Only pick up items named "ResearchCapsule"
 						if item:IsA"Model"and item.Name == "Bandage" or item.Name == "HealthKit" then
-							local itemCFrame = item:GetModelCFrame() * CFrame.new(0, -3.3, 0)
+							local itemCFrame = item:GetPivot() * CFrame.new(0, -3.3, 0)
 
 							tweenplr(itemCFrame)
 
@@ -7825,7 +7816,7 @@ function pickupallextractionitems()
 			for _, item in ipairs(itemsFolder:GetChildren()) do
 				-- Only pick up items named "ResearchCapsule"
 				if item:IsA"Model"and item.Name == "JumperCable" or item.Name == "Valve" then
-					local itemCFrame = item:GetModelCFrame() * CFrame.new(0, -3.3, 0)
+					local itemCFrame = item:GetPivot() * CFrame.new(0, -3.3, 0)
 					tweenplr(itemCFrame)
 				end
 			end
@@ -7858,7 +7849,7 @@ function pickupallbaskets()
 		if itemsFolder and #itemsFolder:GetChildren() > 0 then
 			for _, item in ipairs(itemsFolder:GetChildren()) do
 				if item:IsA"Model" and item.Name:match("Holiday") then
-					local itemCFrame = item:GetModelCFrame() * CFrame.new(0, -3.3, 0)
+					local itemCFrame = item:GetPivot() * CFrame.new(0, -3.3, 0)
 					tweenplr(itemCFrame)
 				end
 			end
