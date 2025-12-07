@@ -437,7 +437,7 @@ config.changelogs = {
     " ",
     "Command updates:",
     "- Added 2 'Main' commands.",
-    "- Added 5 'Local Player' commands.",
+    "- Added 6 'Local Player' commands.",
     "- Added 2 'Teleports / Travel' commands.",
     " ",
     "- Replaced 'Local Player' 'enablegodmode' command with 'offsettwisted' command.",
