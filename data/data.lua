@@ -190,7 +190,7 @@ config.commands = {
         },
         ["Local Player"] = {
         "offsettwisted, ot [x,z] - makes it so when a twisted chases you it offsets them according to your position by the specified values (UNRELIABLE)",
-        "restoretwisted, rt - restores your twisted position back to normal"
+        "restoretwisted, rt - restores your twisted position back to normal",
         " ",
         "removeanticheat, rac - removes anticheat (UNRELIABLE)",
         "bypassanticheat, bac - bypass anticheat (UNRELIABLE)",
@@ -450,7 +450,7 @@ config.changelogs = {
     " ",
     "- Replaced 'Local Player' 'enablegodmode' command with 'offsettwisted' command.",
     "- Renamed 'Teleports / Travel' 'teleporttogenerator' command to 'tweentogenerator' command.",
-    "- Fixed enableautocalibration2 not working on certain machine types."
+    "- Fixed 'enableautocalibration2' not working on certain machine types."
     "- Fixed some item usage commands not working for Bassie's 4th slot."
     "- Removed some commands that were patched ages ago.",
     "Other:",
