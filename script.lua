@@ -6515,7 +6515,14 @@ function dwtpte()
 end
 
 function dwtwte()
-	tweenplr(noxious["elevator cframe"])
+	spawn(function() disableNoclip() end)
+	spawn(function() enableNoclip() end)
+	spawn(function() bringplayerdown() end)
+	wait(0.2)
+	tweenplr(noxious["elevator cframe"] * CFrame.new(0, -3.3, 0))
+	wait(0.2)
+	spawn(function() bringplayerup() end)
+	spawn(function() disableNoclip() end)
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
