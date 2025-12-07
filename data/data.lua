@@ -450,7 +450,8 @@ config.changelogs = {
     "- Fixed and EXTREMELY optimised overall functionality and references.",
     "- Added command count to information.",
     "- Renamed 'Teleports' tab to 'Teleports / Travel'.",
-    "- Implemented better error logging for commands."
+    "- Implemented better error logging for commands.",
+    "- Added (!) to some still incomplete commands.",
 }
 config.information = {
     "Information:",
