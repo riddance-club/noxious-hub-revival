@@ -8597,6 +8597,29 @@ end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
+local orbittwisteding
+
+function enableorbittwisted(speed, range)
+	if orbittwisteding then return end
+	orbittwisteding = true
+	local angle = 0
+	task.spawn(function()
+		while orbittwisteding do
+			angle += speed  -- rotation speed
+			task.wait()
+		end
+	end)
+	noxious.ReplicatedStorage.Events.GetCharacterPosition.OnClientInvoke = function()
+		local pos = noxious["local character"]:GetPivot().Position
+		local x, z = math.cos(angle) * range, math.sin(angle) * range
+		return pos + Vector3.new(x, 0, z)
+	end
+end
+
+function disableorbittwisted()
+	orbittwisteding = false
+end
+
 function offsettwisted(x, z)
 	noxious["replicated storage"].Events.GetCharacterPosition.OnClientInvoke = function() 
 		return noxious["local character"]:GetPivot().Position + Vector3.new(x, 0, z)
@@ -10742,6 +10765,12 @@ function handlecommands(command)
 		if args[3] then notify("Please do not add spaces.", 5, "error");return end
 		local x, z = args[2]:match("([^,]+),([^,]+)") -- split by ,
 		offsettwisted(x, z)
+		
+	elseif (args[1] == "enableorbittwisted" or args[1] == "eot") and tonumber(args[2]) and tonumber(args[3]) then
+		enableorbittwisted(tonumber(args[2]), tonumber(args[3]))
+		
+	elseif lwr == "disableorbittwisted" or lwr == "dot" then
+		disableorbittwisted()
 		
 	elseif lwr == "restoretwisted" or lwr == "rt" then
 		restorebacktwistedpos()
