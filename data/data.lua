@@ -217,7 +217,6 @@ config.commands = {
         "unclipframefly, uncffly - stop clip frame flying",
         " ",
         "givetptool, tptool - gives you a teleport tool",
-        "reset, re - resets your character then teleports you back to where you died after respawning",
         "die - sets your character's health to 0",
         "noclip - enables noclip",
         "unnoclip, clip - disables noclip",
@@ -329,8 +328,6 @@ config.commands = {
         "disablewalkfling, dwf - disables walkfling",
         " ",
         "singthickofit, stoi - makes you sing thick of it by ksi",
-        " ",
-        "becomecharacter, bchar - become yourself",
     },
     ["Animations / Emotes"] = {
         "glistensanimationcloset, gac - opens Rode Striker's 'Glisten's animation closet' script",
