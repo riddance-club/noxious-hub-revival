@@ -195,7 +195,7 @@ config.commands = {
         "restoretwisted, rt - restores your twisted position back to normal",
         " ",
         "removeanticheat, rac - removes the ban anticheat (UNRELIABLE)",
-        "(!)bypassanticheat, bac - bypasses movement anticheat (UNRELIABLE)",
+        "(!) bypassanticheat, bac - bypasses movement anticheat (UNRELIABLE)",
         " ",
         "usepublicloadout, upl - enables everything necessary for a public run",
         "usesololoadout, usl - enables everything necessary for a solo run",
