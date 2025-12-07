@@ -190,12 +190,14 @@ config.commands = {
         },
         ["Local Player"] = {
         "offsettwisted, ot [x,z] - makes it so when a twisted chases you it offsets them according to your position by the specified values (UNRELIABLE)",
+        "leadtwisted, lt [target] - makes it so when a twisted chases you it starts making them chase the target's position instead",
+        "autoleadtwisted, alt - makes it so when a twisted chases you it starts making them chase the closest player's position instead"
         "enableorbittwisted, eot [speed] [range] - makes it so when a twisted chases you it starts making them orbit around you with the specified rotation speed and range.",
         "disableorbittwisted, dot - disables orbit twisted",
         "restoretwisted, rt - restores your twisted position back to normal",
         " ",
-        "removeanticheat, rac - removes the ban anticheat (UNRELIABLE)",
-        "(!) bypassanticheat, bac - bypasses movement anticheat (UNRELIABLE)",
+        "removeanticheat, rac - attempts to remove the ban anticheat (UNRELIABLE)",
+        "(!) bypassanticheat, bac - attempts to bypass the movement anticheat (UNRELIABLE)",
         " ",
         "usepublicloadout, upl - enables everything necessary for a public run",
         "usesololoadout, usl - enables everything necessary for a solo run",
@@ -437,7 +439,7 @@ config.changelogs = {
     " ",
     "Command updates:",
     "- Added 2 'Main' commands.",
-    "- Added 6 'Local Player' commands.",
+    "- Added 8 'Local Player' commands.",
     "- Added 2 'Teleports / Travel' commands.",
     " ",
     "- Replaced 'Local Player' 'enablegodmode' command with 'offsettwisted' command.",
@@ -491,6 +493,7 @@ config.information = {
     "[delay] = Amount of seconds before running the functionality of a loop (Number)",
     "[text] = Inputted text will run on the command",
     "[toon name] = A Toon from the Toon names",
+    "and so on..."
     " ",
     "Player arguments (For commands, like the Fun / Trolls commands.):",
     " ",

@@ -4650,9 +4650,6 @@ function tweenItemColors(item)
 end
 
 function addHighlights()
-	local currentRoom = workspace:FindFirstChild("CurrentRoom")
-
-	-- Monster highlighting
 	if highlightTypes.Monsters and getMap() then
 		local monstersFolder = getMap():FindFirstChild("Monsters")
 			if monstersFolder then
@@ -5296,7 +5293,6 @@ end
 
 -- Update the updateTracers function to use these color functions
 function updateTracers()
-	local currentRoom = workspace:FindFirstChild("CurrentRoom")
 	if tick() - tracerLastUpdate < updateInterval then return end
 	tracerLastUpdate = tick()
 
@@ -5433,7 +5429,7 @@ function updateTracers()
 		end
 	end
 
-	-- Add machines (generators) from CurrentRoom.Generators folder
+	-- Add machines (generators) from map Generators folder
 	if tracerTypes.Machines and getMap() then
 		local generatorsFolder = getMap():FindFirstChild("Generators")
 		if generatorsFolder then
@@ -8333,19 +8329,14 @@ local atptg2ismonitoring = false -- Track if we're currently monitoring
 local hastpdtoagen = false -- Track if we've already teleported during this decoding session
 
 function atptg2ismonsterneargen(generator, radius)
-	local currentRoom = workspace:FindFirstChild("CurrentRoom")
-	if currentRoom then
-		for _, model in pairs(currentRoom:GetChildren()) do
-			if model:IsA("Model") then
-				local monstersFolder = getMap():FindFirstChild("Monsters")
-				if monstersFolder then
-					for _, monster in pairs(monstersFolder:GetChildren()) do
-						if monster:IsA("Model") and monster.PrimaryPart then
-							local distance = (monster.PrimaryPart.Position - generator.PrimaryPart.Position).Magnitude
-							if distance <= radius then
-								return true
-							end
-						end
+	if getMap() then
+		local monstersFolder = getMap():FindFirstChild("Monsters")
+		if monstersFolder then
+			for _, monster in pairs(monstersFolder:GetChildren()) do
+				if monster:IsA("Model") and monster.PrimaryPart then
+					local distance = (monster.PrimaryPart.Position - generator.PrimaryPart.Position).Magnitude
+					if distance <= radius then
+						return true
 					end
 				end
 			end
@@ -8355,36 +8346,31 @@ function atptg2ismonsterneargen(generator, radius)
 end
 
 function tptg()
-	local currentRoom = workspace:FindFirstChild("CurrentRoom")
-	if currentRoom then
-		for _, item in pairs(currentRoom:GetChildren()) do
-			if item:IsA("Model") then
-				local generatorsFolder = item:FindFirstChild("Generators")
-				if generatorsFolder then
-					local generators = {}
-					for _, generator in pairs(generatorsFolder:GetChildren()) do
-						if generator:IsA("Model") and generator.PrimaryPart then
-							local statsFolder = generator:FindFirstChild("Stats")
-							if statsFolder then
-								local completedValue = statsFolder:FindFirstChild("Completed")
-								if completedValue and completedValue:IsA("BoolValue") and not completedValue.Value then
-									if not atptg2ismonsterneargen(generator, 20) and not isConnieActive(generator) then
-										table.insert(generators, generator)
-									end
-								end
+	if getMap() then
+		local generatorsFolder = getMap():FindFirstChild("Generators")
+		if generatorsFolder then
+			local generators = {}
+			for _, generator in pairs(generatorsFolder:GetChildren()) do
+				if generator:IsA("Model") and generator.PrimaryPart then
+					local statsFolder = generator:FindFirstChild("Stats")
+					if statsFolder then
+						local completedValue = statsFolder:FindFirstChild("Completed")
+						if completedValue and completedValue:IsA("BoolValue") and not completedValue.Value then
+							if not atptg2ismonsterneargen(generator, 20) and not isConnieActive(generator) then
+								table.insert(generators, generator)
 							end
 						end
 					end
-
-					if #generators > 0 then
-						local randomGenerator = generators[math.random(1, #generators)]
-						local generatorCFrame = randomGenerator:GetPrimaryPartCFrame()
-						local forwardPosition = generatorCFrame.Position + generatorCFrame.LookVector * 4
-						local targetCFrame = CFrame.new(forwardPosition, generatorCFrame.Position) * CFrame.new(0, 2.3, 0)
-						teleportplr(targetCFrame)
-						hastpdtoagen = true -- Mark that we've teleported
-					end
 				end
+			end
+
+			if #generators > 0 then
+				local randomGenerator = generators[math.random(1, #generators)]
+				local generatorCFrame = randomGenerator:GetPrimaryPartCFrame()
+				local forwardPosition = generatorCFrame.Position + generatorCFrame.LookVector * 4
+				local targetCFrame = CFrame.new(forwardPosition, generatorCFrame.Position) * CFrame.new(0, 2.3, 0)
+				teleportplr(targetCFrame)
+				hastpdtoagen = true -- Mark that we've teleported
 			end
 		end
 	end
@@ -8623,6 +8609,44 @@ end
 function offsettwisted(x, z)
 	noxious["replicated storage"].Events.GetCharacterPosition.OnClientInvoke = function() 
 		return noxious["local character"]:GetPivot().Position + Vector3.new(x, 0, z)
+	end
+end
+
+function leadtwisted(targetName)
+	local targetPlayer
+	if targetName:lower() == "random" then
+		local players = noxious["players"]:GetPlayers()
+		if #players > 0 then
+			targetPlayer = players[math.random(1, #players)]
+		end
+	else
+		targetPlayer = findPlayerByPartialName(targetName)
+	end
+	if targetPlayer then
+		noxious["replicated storage"].Events.GetCharacterPosition.OnClientInvoke = function()
+			return targetPlayer and targetPlayer.Character:GetPivot().Position
+		end
+	end
+end
+
+-- mostly copy and paste from riddance source lmfao
+function autoleadtwisted()
+	noxious["replicated storage"].Events.GetCharacterPosition.OnClientInvoke = function()
+		local cplr = nil
+		local sd = math.huge
+		local pos = Vector3.zero
+		for _, player in ipairs(noxious["players"]:GetPlayers()) do
+			local character = player.Character
+            if character and player ~= noxious["local player"] then
+				local distance = (character:GetPivot().Position - noxious["local character"]:GetPivot().Position).Magnitude
+				if distance < sd then
+					sd, cplr, pos = distance, player, character:GetPivot().Position
+				end
+			end
+		end
+		if cplr and pos then
+			return pos
+		end
 	end
 end
 
@@ -9326,40 +9350,30 @@ end
 
 -- Function to start monitoring Twisteds
 function startTwistedsNotifierLoop()
-	local currentRoom = workspace:FindFirstChild("CurrentRoom")
-	if not currentRoom then return end
-
-	-- Loop to check for Twisteds
 	while notifyTwistedsEnabled2 do
 		local newTwisteds2 = {} -- Store new Twisteds for this cycle
 		local totalMonsters2 = 0 -- Count the total number of monsters
 		local newModelsGenerated2 = false -- Flag to track if new models have been generated in this cycle
 
-		-- Check if CurrentRoom is empty
-		if #currentRoom:GetChildren() == 0 then
-			notifiedTwisteds2 = {} -- Reset notifiedTwisteds when CurrentRoom is empty
-			twistedsMessageSent2 = false -- Reset the message sent flag
-		else
-			-- Collect all Twisteds
-			for _, model in ipairs(currentRoom:GetChildren()) do
-				if model:IsA("Model") then
-					local monstersFolder = getMap():FindFirstChild("Monsters")
-					if monstersFolder then
-						for _, monster in ipairs(monstersFolder:GetChildren()) do
-							totalMonsters2 += 1 -- Increment the count of monsters
-							local cleanedName = cleanMonsterName(monster.Name) -- Clean the name
+		if getMap() then
+			local monstersFolder = getMap():FindFirstChild("Monsters")
+			if monstersFolder then
+				for _, monster in ipairs(monstersFolder:GetChildren()) do
+					totalMonsters2 += 1 -- Increment the count of monsters
+					local cleanedName = cleanMonsterName(monster.Name) -- Clean the name
 
-							-- If it's a new Twisted, add it to the list and mark it as notified
-							if not notifiedTwisteds2[cleanedName] then
-								table.insert(newTwisteds2, cleanedName)
-								notifiedTwisteds2[cleanedName] = true
-								newModelsGenerated2 = true -- New model has been generated in this cycle
-								lastModelTimestamp2 = tick() -- Update the timestamp when a new model is generated
-							end
-						end
+					-- If it's a new Twisted, add it to the list and mark it as notified
+					if not notifiedTwisteds2[cleanedName] then
+						table.insert(newTwisteds2, cleanedName)
+						notifiedTwisteds2[cleanedName] = true
+						newModelsGenerated2 = true -- New model has been generated in this cycle
+						lastModelTimestamp2 = tick() -- Update the timestamp when a new model is generated
 					end
 				end
 			end
+		else
+			notifiedTwisteds2 = {} -- Reset notifiedTwisteds when map is empty
+			twistedsMessageSent2 = false -- Reset the message sent flag
 		end
 
 		-- If there are more than one monster and the message hasn't been sent yet
@@ -9379,7 +9393,7 @@ function startTwistedsNotifierLoop()
 		-- Cleanup Twisteds that no longer exist in the room
 		for twistedName2, _ in pairs(notifiedTwisteds2) do
 			local stillExists = false
-			for _, model in ipairs(currentRoom:GetChildren()) do
+			if getMap() then
 				local monstersFolder = getMap():FindFirstChild("Monsters")
 				if monstersFolder and monstersFolder:FindFirstChild(twistedName2) then
 					stillExists = true
@@ -9423,30 +9437,27 @@ function startTwistedsNotifyLoop()
 		local totalMonsters = 0 -- Count the total number of monsters
 		local newModelsGenerated = false -- Flag to track if new models have been generated in this cycle
 
-		-- Check if CurrentRoom is empty
-		if #currentRoom:GetChildren() == 0 then
-			notifiedTwisteds = {} -- Reset notifiedTwisteds when CurrentRoom is empty
-			twistedsMessageSent = false -- Reset the message sent flag
-		else
-			-- Collect all Twisteds
-			if getMap() then
-					local monstersFolder = getMap():FindFirstChild("Monsters")
-					if monstersFolder then
-						for _, monster in ipairs(monstersFolder:GetChildren()) do
-							totalMonsters += 1 -- Increment the count of monsters
-							local cleanedName = cleanMonsterName(monster.Name) -- Clean the name
+		-- Collect all Twisteds
+		if getMap() then
+			local monstersFolder = getMap():FindFirstChild("Monsters")
+			if monstersFolder then
+				for _, monster in ipairs(monstersFolder:GetChildren()) do
+					totalMonsters += 1 -- Increment the count of monsters
+					local cleanedName = cleanMonsterName(monster.Name) -- Clean the name
 
-							-- If it's a new Twisted, add it to the list and mark it as notified
-							if not notifiedTwisteds[cleanedName] then
-								table.insert(newTwisteds, cleanedName)
-								notifiedTwisteds[cleanedName] = true
-								newModelsGenerated = true -- New model has been generated in this cycle
-								lastModelTimestamp = tick() -- Update the timestamp when a new model is generated
-							end
-						end
+					-- If it's a new Twisted, add it to the list and mark it as notified
+					if not notifiedTwisteds[cleanedName] then
+						table.insert(newTwisteds, cleanedName)
+						notifiedTwisteds[cleanedName] = true
+						newModelsGenerated = true -- New model has been generated in this cycle
+						lastModelTimestamp = tick() -- Update the timestamp when a new model is generated
 					end
 				end
 			end
+		else
+			notifiedTwisteds = {} -- Reset notifiedTwisteds when map is empty
+			twistedsMessageSent = false -- Reset the message sent flag
+		end
 
 		-- If there are more than one monster and the message hasn't been sent yet
 		if totalMonsters > 1 and #newTwisteds > 0 and not twistedsMessageSent then
@@ -9468,7 +9479,7 @@ function startTwistedsNotifyLoop()
 		-- Cleanup Twisteds that no longer exist in the room
 		for twistedName, _ in pairs(notifiedTwisteds) do
 			local stillExists = false
-			for _, model in ipairs(currentRoom:GetChildren()) do
+			if getMap() then
 				local monstersFolder = getMap():FindFirstChild("Monsters")
 				if monstersFolder and monstersFolder:FindFirstChild(twistedName) then
 					stillExists = true
@@ -9528,37 +9539,30 @@ local itemNameMapping = {
 local chatItemsLoopEnabled2 = false -- Flag to control the loop
 
 function startNotifyItemsLoop()
-	local currentRoom = workspace:FindFirstChild("CurrentRoom")
-	if not currentRoom then return end
-
-	-- Start the loop to check for items
 	while chatItemsLoopEnabled2 do
-		for _, model in ipairs(currentRoom:GetChildren()) do
-			if model:IsA("Model") then
-				local itemsFolder = getMap():FindFirstChild("Items")
-				if itemsFolder then
-					local itemsFound2 = {}
-					for _, item in ipairs(itemsFolder:GetChildren()) do
-						-- Check if the item is in the targetItems table and hasn't been chatted about yet
-						if table.find(targetItems2, item.Name) and not chattedItems2[item.Name] then
-							table.insert(itemsFound2, item.Name)
-							chattedItems2[item.Name] = true
-						end
+		if getMap() then
+			local itemsFolder = getMap():FindFirstChild("Items")
+			if itemsFolder then
+				local itemsFound2 = {}
+				for _, item in ipairs(itemsFolder:GetChildren()) do
+					-- Check if the item is in the targetItems table and hasn't been chatted about yet
+					if table.find(targetItems2, item.Name) and not chattedItems2[item.Name] then
+						table.insert(itemsFound2, item.Name)
+						chattedItems2[item.Name] = true
 					end
+				end
 
 					-- Chat out detected items
-					if #itemsFound2 > 0 then
-						-- Replace item names based on the mapping (HealthKit -> Medkit)
-						for i, itemName2 in ipairs(itemsFound2) do
-							if itemNameMapping[itemName2] then
-								itemsFound2[i] = itemNameMapping[itemName2]
-							end
+				if #itemsFound2 > 0 then
+					-- Replace item names based on the mapping (HealthKit -> Medkit)
+					for i, itemName2 in ipairs(itemsFound2) do
+						if itemNameMapping[itemName2] then
+							itemsFound2[i] = itemNameMapping[itemName2]
 						end
-
-						-- Send chat message
-						wait(0.5)
-						notify(table.concat(itemsFound2, ", ") .. " has been detected.", 5)
 					end
+					-- Send chat message
+					wait(0.5)
+					notify(table.concat(itemsFound2, ", ") .. " has been detected.", 5)
 				end
 			end
 		end
@@ -9566,7 +9570,7 @@ function startNotifyItemsLoop()
 		-- Cleanup items that no longer exist in the room
 		for itemName2, _ in pairs(chattedItems2) do
 			local stillExists2 = false
-			for _, model in ipairs(currentRoom:GetChildren()) do
+			if getMap() then
 				local itemsFolder = getMap():FindFirstChild("Items")
 				if itemsFolder and itemsFolder:FindFirstChild(itemName2) then
 					stillExists2 = true
@@ -9614,10 +9618,6 @@ local targetItems = {
 local chatItemsLoopEnabled = false -- Flag to control the loop
 
 function startChatItemsLoop()
-	local currentRoom = workspace:FindFirstChild("CurrentRoom")
-	if not currentRoom then return end
-
-	-- Start the loop to check for items
 	while chatItemsLoopEnabled do
 		if getMap() then
 				local itemsFolder = getMap():FindFirstChild("Items")
@@ -9653,7 +9653,7 @@ function startChatItemsLoop()
 		-- Cleanup items that no longer exist in the room
 		for itemName, _ in pairs(chattedItems) do
 			local stillExists = false
-			for _, model in ipairs(currentRoom:GetChildren()) do
+			if getMap() then				
 				local itemsFolder = getMap():FindFirstChild("Items")
 				if itemsFolder and itemsFolder:FindFirstChild(itemName) then
 					stillExists = true
@@ -10771,6 +10771,12 @@ function handlecommands(command)
 		
 	elseif lwr == "disableorbittwisted" or lwr == "dot" then
 		disableorbittwisted()
+		
+	elseif (args[1] == "leadtwisted" or args[1] == "lt") and args[2] then
+		leadtwisted(args[2])
+		
+	elseif lwr == "autoleadtwisted" or lwr == "alt" then
+		autoleadtwisted()
 		
 	elseif lwr == "restoretwisted" or lwr == "rt" then
 		restorebacktwistedpos()
