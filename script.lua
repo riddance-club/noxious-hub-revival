@@ -8564,21 +8564,39 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 local autosk2 = false
-
-function skillcheck2()
-	noxious["run service"].Heartbeat:Connect(function()
-		if autosk2 == true then
-			noxious["replicated storage"].Events.SkillcheckUpdate.OnClientInvoke = function() return true end
-		end
-	end)
-end
+local autofsg = false
 
 function enableautoskillcheck2()
-	autosk2 = true
+	if autosk2 then return end
+	while autosk2 do
+		noxious["replicated storage"].Events.SkillcheckUpdate.OnClientInvoke = function() return true end
+		task.wait(1)
+	end
 end
 
 function disableautoskillcheck2()
 	autosk2 = false
+end
+
+function enableautoforcestopgenerator()
+	if autofsg then return end
+	while autofsg do
+		if getMap() then
+			local monstersFolder = getMap():FindFirstChild("Monsters")
+			if monstersFolder then
+				for _, monster in monstersFolder:GetChildren() do
+					if monster:FindFirstChild("ChasingValue") and monster.ChasingValue.Value == noxious["local character"] then
+						forceStop()
+					end
+				end
+			end
+		end
+		task.wait(1/15)
+	end
+end
+
+function disableautoforcestopgenerator()
+	autofsg = false
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
@@ -11031,10 +11049,15 @@ function handlecommands(command)
 
 		-- enable and disable auto calibration 2
 	elseif lwr == "eac2" or lwr == "enableautocalibration2" then
-		notify("Script made by Deka.", 5)
 		enableautoskillcheck2()
 	elseif lwr == "dac2" or lwr == "disableautocalibration2" then
 		disableautoskillcheck2()
+	elseif lwr == "forcestopgenerator" or lwr == "fsg" then
+		forceStop()
+	elseif lwr == "enableautoforcestopgenerator" or lwr == "eafsg" then
+		enableautoforcestopgenerator()
+	elseif lwr == "disableautoforcestopgenerator" or lwr == "dafsg" then
+		disableautoforcestopgenerator()
 
 		-- anti pop-ups
 	elseif lwr == "apu" or lwr == "antipopups" then
