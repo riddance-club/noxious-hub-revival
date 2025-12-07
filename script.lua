@@ -29,6 +29,8 @@ noxious["marketplace service"] = game:GetService("MarketplaceService")
 noxious["core gui"] = game:GetService("CoreGui")
 noxious["players"] = game:GetService("Players")
 noxious["replicated storage"] = game:GetService("ReplicatedStorage")
+noxious["starter gui"] = game:GetService("StarterGui")
+noxious["virtual input manager"] = game:GetService("VirtualInputManager")
 
 -- usually these were all over the code randomly but i dumped them into this file so i can easily update and find them
 noxious["data"] = loadstring(game:HttpGet("https://raw.githubusercontent.com/riddance-club/noxious-hub-revival/refs/heads/main/data/data.lua"))()
@@ -54,12 +56,74 @@ noxious["default image color"] = Color3.new(1, 1, 1)
 noxious["default gray color"] = Color3.new(0.5, 0.5, 0.5)
 noxious["default black color"] = Color3.new(0, 0, 0)
 
-noxious["player gui"] = noxious["core gui"]
 noxious["local player"] = noxious["players"].LocalPlayer
 noxious["current camera"] = workspace.CurrentCamera
 
+function updateReferences(char)
+	noxious["local character"] = char
+	noxious["local humanoid"] = char:WaitForChild("Humanoid")	
+	noxious["local root"] = char:WaitForChild("HumanoidRootPart")
+	noxious["player gui"] = noxious["local player"]:WaitForChild("PlayerGui")
+end
+
+task.spawn(function() -- just so it wont make the script wait forever if anything invalid happens
+	updateReferences(noxious["local player"].Character)
+end)
+
+noxious["local player"].CharacterAdded:Connect(updateReferences)
 
 -------------------------------------------------------------------------------------------------------------------------------
+
+-- dandy's world stuff, dumped from riddance because im lazy lmao
+
+noxious["elevator"] = workspace:FindFirstChild("Elevators") and workspace.Elevators:FindFirstChild("Elevator")
+noxious["elevator cframe"] = noxious["elevator"] and noxious["elevator"]:GetPivot() * CFrame.new(0, 3, 0)
+
+-- currently unused these two
+noxious["baseplate trigger"] = workspace:FindFirstChild("BaseplateTrigger")
+noxious["baseplate"] = workspace:FindFirstChild("Baseplate")
+
+local map
+function getMap()
+	if map and map.Parent then
+		return map
+	end
+	map = workspace.CurrentRoom:FindFirstChildWhichIsA("Model");
+	return map
+end
+
+function forceStop()
+	local decoding = noxious["local character"].Decoding.Value
+	if decoding ~= nil then
+		decoding.Stats.StopInteracting:FireServer("Stop")
+	end
+	return not noxious["player gui"].ScreenGui.Menu.StopGenerator.Visible
+end
+
+function restorebacktwistedpos()
+	noxious["replicated storage"].Events.GetCharacterPosition.OnClientInvoke = function() 
+		return noxious["local character"]:GetPivot().Position
+	end
+end
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+function teleportplr(cf)
+	workspace.Gravity = 0
+	noxious["local root"].AssemblyLinearVelocity = Vector3.zero
+	noxious["local character"]:PivotTo(cf)
+	workspace.Gravity = 196.2
+end
+
+function tweenplr(cf)
+	local duration = (noxious["local root"].Position - cf.Position).Magnitude / (noxious["local player"]:GetAttribute("KM_MAX_PLAYER_SPEED") * 1.25)
+	local tween = noxious["tween service"]:Create(noxious["local root"], TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), { CFrame = cf })
+	workspace.Gravity = 0
+	noxious["local root"].AssemblyLinearVelocity = Vector3.zero
+	tween:Play()
+	tween.Completed:Wait()
+	workspace.Gravity = 196.2
+end
 
 function generateRandomString(length)
 	local characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -3782,7 +3846,7 @@ function intro()
 
 	-------------------------------------------------------------------------------------------------------------------------------
 
-	wait(0)
+	task.wait()
 
 	-------------------------------------------------------------------------------------------------------------------------------
 
@@ -3818,8 +3882,7 @@ function intro()
 
 	if game.PlaceId ~= noxious["dandy's world lobby"] 
 		and game.PlaceId ~= noxious["dandy's world run"] 
-		and game.PlaceId ~= noxious["dandy's world roleplay server"] 
-		and game.PlaceId ~= noxious["test game"] then
+		and game.PlaceId ~= noxious["dandy's world roleplay server"] then
 
 		notify("You aren't in dandy's world.", 5, "warning")
 
@@ -4066,12 +4129,8 @@ if game.PlaceId == noxious["dandy's world roleplay server"] then
 	print("[Noxious Hub]: You are currently in: A Roleplay Server.")	
 end
 
-if game.PlaceId == noxious["test game"] then
-	print("[Noxious Hub]: You are currently in: The Test Game.")	
-end
-
-if game.PlaceId ~= noxious["test game"] and game.PlaceId ~= noxious["dandy's world run"] and game.PlaceId ~= noxious["dandy's world lobby"] and game.PlaceId ~= noxious["dandy's world roleplay server"] then
-	print("[Noxious Hub]: You aren't in dandy's world.")	
+if game.PlaceId ~= noxious["dandy's world run"] and game.PlaceId ~= noxious["dandy's world lobby"] and game.PlaceId ~= noxious["dandy's world roleplay server"] then
+	print("[Noxious Hub]: You aren't in dandy's world. You might encounter some issues.")	
 end
 
 print("---------------------------------------------------------------------------")	
@@ -4096,101 +4155,11 @@ end)
 -------------------------------------------------------------------------------------------------------------------------------
 
 function bringplayerdown()
-	workspace.Gravity = 0
-	local player = noxious["local player"]
-	local character = player.Character or player.CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-
-	-- Adjust the Y position
-	local currentPosition = humanoidRootPart.Position
-	humanoidRootPart.CFrame = CFrame.new(currentPosition.X, currentPosition.Y - 3.3, currentPosition.Z)
+	teleportplr(noxious["local character"]:GetPivot() * CFrame.new(0, -3.3, 0))
 end
 
 function bringplayerup()
-	workspace.Gravity = 196.2
-	local player = noxious["local player"]
-	local character = player.Character or player.CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-
-	local currentPosition = humanoidRootPart.Position
-	humanoidRootPart.CFrame = CFrame.new(currentPosition.X, currentPosition.Y + 3.3, currentPosition.Z)
-end
-
--------------------------------------------------------------------------------------------------------------------------------
-
-local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-
-function updateCharacterReferences(newCharacter)
-	character = newCharacter
-	local humanoid = character:WaitForChild"Humanoid"	
-end
-
-noxious["local player"].CharacterAdded:Connect(updateCharacterReferences)
-
--------------------------------------------------------------------------------------------------------------------------------
-
-function tweenplr(targetCFrame, speed)
-	local player = noxious["local player"]
-	local character = player.Character or player.CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-
-	local distance = (humanoidRootPart.Position - targetCFrame.Position).Magnitude
-	local duration = distance / speed
-
-	local tweenInfo = TweenInfo.new(
-		duration,
-		Enum.EasingStyle.Linear,
-		Enum.EasingDirection.InOut
-	)
-
-	local goal = { CFrame = targetCFrame }
-
-	local tween = noxious["tween service"]:Create(humanoidRootPart, tweenInfo, goal)
-	tween:Play()
-	tween.Completed:Wait()
-end
-
--------------------------------------------------------------------------------------------------------------------------------
-
-function reset()
-	local sp
-	local so
-
-	local function scs(character)
-		local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-		if humanoidRootPart then
-			sp = humanoidRootPart.Position
-			so = humanoidRootPart.Orientation
-		end
-	end
-
-	local function kc(character)
-		local humanoid = character:FindFirstChildOfClass("Humanoid")
-		if humanoid then
-			humanoid.Health = 0
-		end
-	end
-
-	local function oca(character)
-		task.delay(0.2, function()
-			if sp and so then
-				character:WaitForChild("HumanoidRootPart")
-				character:SetPrimaryPartCFrame(CFrame.new(sp) * CFrame.Angles(0, math.rad(so.Y), 0))
-			end
-
-			sp = nil
-			so = nil
-		end)
-	end
-
-	local function sktp(player)
-		local character = player.Character or player.CharacterAdded:Wait()
-		scs(character)
-		kc(character)
-		player.CharacterAdded:Connect(oca)
-	end
-
-	sktp(noxious["local player"])
+	teleportplr(noxious["local character"]:GetPivot() * CFrame.new(0, 3.3, 0))
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
@@ -4204,9 +4173,7 @@ function boostfps()
 	Terrain.WaterTransparency = 0
 	Lighting.GlobalShadows = false
 	Lighting.FogEnd = 9e9
-	if game.PlaceId ~= noxious["test game"] then
-		settings().Rendering.QualityLevel = 1
-	end
+	settings().Rendering.QualityLevel = 1
 	for i,v in pairs(game:GetDescendants()) do
 		if v:IsA("Part") or v:IsA("UnionOperation") or v:IsA("MeshPart") or v:IsA("CornerWedgePart") or v:IsA("TrussPart") then
 			v.Material = "Plastic"
@@ -4360,103 +4327,6 @@ disableMTI()
 
 -------------------------------------------------------------------------------------------------------------------------------
 
-function becomeCharacter()	
-	local ReplicatedStorage = game:GetService"ReplicatedStorage"		
-	local speaker = noxious["local player"]
-
-	local args = {
-		[1] = false
-	}
-	ReplicatedStorage.Events.UpdateSpawnedIn:FireServer(unpack(args))
-
-	local character = speaker.Character
-	local savedCFrame
-
-	if character then
-		local rootPart = character:FindFirstChild"HumanoidRootPart"			
-		if rootPart then
-			savedCFrame = rootPart.CFrame
-		end
-	end
-
-	if character then
-		local humanoid = character:FindFirstChildWhichIsA"Humanoid"			
-		if humanoid then
-			humanoid.Health = 0
-		end
-	end
-
-	speaker.CharacterAdded:Wait()
-	local newCharacter = speaker.Character
-
-	if not newCharacter then return end
-
-	local function setupHumanoid()
-		local Cam = noxious["current camera"]
-		local Pos = Cam.CFrame
-		local Char = newCharacter
-		local Human = Char:FindFirstChildWhichIsA"Humanoid"
-
-		if not Human then return end
-
-		local nHuman = Human:Clone()
-		nHuman.Parent = Char
-		speaker.Character = nil
-
-		nHuman.BreakJointsOnDeath = true
-		nHuman.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-
-		Human:Destroy()
-		speaker.Character = Char
-		Cam.CameraSubject = nHuman
-		Cam.CFrame = Pos
-
-		local rootPart = Char:FindFirstChild"HumanoidRootPart"			
-		if rootPart and savedCFrame then
-			rootPart.CFrame = savedCFrame
-		end
-
-		local animateScript = Char:FindFirstChild"Animate"			
-		if animateScript then
-			animateScript.Disabled = true
-			wait()
-			animateScript.Disabled = false
-		end
-
-		nHuman.Health = nHuman.MaxHealth
-	end
-
-	newCharacter:WaitForChild("Humanoid", 5)
-	setupHumanoid()
-
-	wait(0)
-
-	local Cam = noxious["current camera"]
-	local Pos, Char = Cam.CFrame, speaker.Character
-	local Human = Char and Char.FindFirstChildWhichIsA(Char, "Humanoid")
-	local nHuman = Human.Clone(Human)
-	nHuman.Parent, speaker.Character = Char, nil
-	nHuman.SetStateEnabled(nHuman, 15, false)
-	nHuman.SetStateEnabled(nHuman, 1, false)
-	nHuman.SetStateEnabled(nHuman, 0, false)
-	nHuman.BreakJointsOnDeath, Human = true, Human.Destroy(Human)
-	speaker.Character, Cam.CameraSubject, Cam.CFrame = Char, nHuman, wait() and Pos
-	nHuman.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-	local Script = Char.FindFirstChild(Char, "Animate")
-	if Script then
-		Script.Disabled = true
-		wait()
-		Script.Disabled = false
-	end
-	nHuman.Health = nHuman.MaxHealth
-
-	wait(1)
-
-	savedCFrame = nil
-end
-
--------------------------------------------------------------------------------------------------------------------------------
-
 function createNoclip()
 	local connections = {} -- Store connections for toggling
 	local touchedObjects = {} -- Store touched objects
@@ -4474,7 +4344,7 @@ function createNoclip()
 		end
 
 		-- Ignore parts that belong to the player
-		if part:IsDescendantOf(noxious["local player"].Character) then
+		if part:IsDescendantOf(noxious["local character"]) then
 			return true
 		end
 
@@ -4509,16 +4379,7 @@ function createNoclip()
 
 		-- Handle Baseplate teleport logic
 		if otherPart.Name == "Baseplate" then
-			local elevatorsFolder = workspace:FindFirstChild("Elevators")                
-			if elevatorsFolder then
-				local elevatorModel = elevatorsFolder:FindFirstChildWhichIsA("Model")                    
-				if elevatorModel then
-					local monsterBlocker = elevatorModel:FindFirstChild("MonsterBlocker")                        
-					if monsterBlocker and monsterBlocker:IsA("Part") then
-						noxious["local player"].Character:SetPrimaryPartCFrame(monsterBlocker.CFrame)
-					end
-				end
-			end
+			teleportplr(noxious["elevator cframe"])
 			return
 		end
 
@@ -4537,14 +4398,11 @@ function createNoclip()
 
 	-- Enable noclip for the character
 	local function enableNoclip()
-		local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-		local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-
 		if not connections.touched then
-			connections.touched = humanoidRootPart.Touched:Connect(onTouched)
+			connections.touched = noxious["local root"].Touched:Connect(onTouched)
 		end
 		if not connections.touchEnded then
-			connections.touchEnded = humanoidRootPart.TouchEnded:Connect(onTouchEnded)
+			connections.touchEnded = noxious["local root"].TouchEnded:Connect(onTouchEnded)
 		end
 	end
 
@@ -4781,9 +4639,8 @@ function addHighlights()
 	local currentRoom = workspace:FindFirstChild("CurrentRoom")
 
 	-- Monster highlighting
-	if highlightTypes.Monsters and currentRoom then
-		for _, model in pairs(currentRoom:GetChildren()) do
-			local monstersFolder = model:FindFirstChild("Monsters")
+	if highlightTypes.Monsters and getMap() then
+		local monstersFolder = getMap():FindFirstChild("Monsters")
 			if monstersFolder then
 				for _, monster in pairs(monstersFolder:GetChildren()) do
 					if monster:IsA("Model") and not monster:FindFirstChildOfClass("Highlight") then
@@ -4829,12 +4686,10 @@ function addHighlights()
 				end
 			end
 		end
-	end
 
 	-- Fake Elevator highlighting
-	if highlightTypes.FakeElevator and currentRoom then
-		for _, model in pairs(currentRoom:GetChildren()) do
-			local freeArea = model:FindFirstChild("FreeArea")
+	if highlightTypes.FakeElevator and getMap() then
+		local freeArea = getMap():FindFirstChild("FreeArea")
 			if freeArea then
 				local fakeElevator = freeArea:FindFirstChild("FakeElevator")
 				if fakeElevator and fakeElevator:IsA("Model") and not fakeElevator:FindFirstChildOfClass("Highlight") then
@@ -4857,12 +4712,10 @@ function addHighlights()
 				end
 			end
 		end
-	end
 
 	-- Item highlighting
-	if highlightTypes.Items and currentRoom then
-		for _, model in pairs(currentRoom:GetChildren()) do
-			local itemsFolder = model:FindFirstChild("Items")
+	if highlightTypes.Items and getMap() then
+			local itemsFolder = getMap():FindFirstChild("Items")
 			if itemsFolder then
 				for _, item in pairs(itemsFolder:GetChildren()) do
 					if item:IsA("Model") and not item:FindFirstChildOfClass("Highlight") then
@@ -4978,7 +4831,6 @@ function addHighlights()
 				end
 			end
 		end
-	end
 
 	-- Player highlighting
 	if highlightTypes.Players then
@@ -5012,105 +4864,94 @@ function addHighlights()
 	end
 
 	-- Machine highlighting
-	if highlightTypes.Machines and currentRoom then
-		for _, model in pairs(currentRoom:GetChildren()) do
-			local generatorsFolder = model:FindFirstChild("Generators")                
-			if generatorsFolder then
-				for _, generator in pairs(generatorsFolder:GetChildren()) do
-					if generator:IsA("Model") and not generator:FindFirstChildOfClass("Highlight") then
-						local highlight = Instance.new("Highlight")                            
-						local textColor = getHighlightColor("Machine")
-						local fillColor = getHighlightColor("Machine")
-						local statsFolder = generator:FindFirstChild("Stats")                            
-						local completed = statsFolder and statsFolder:FindFirstChild("Completed")                            
-						local currentAmount = statsFolder and statsFolder:FindFirstChild("CurrentAmount")                            
-						local requiredAmount = statsFolder and statsFolder:FindFirstChild("RequiredAmount")                            
-						local connie = statsFolder and statsFolder:FindFirstChild("Connie")
+	if highlightTypes.Machines and getMap() then
+		local generatorsFolder = getMap():FindFirstChild("Generators")                
+		if generatorsFolder then
+			for _, generator in pairs(generatorsFolder:GetChildren()) do
+				if generator:IsA("Model") and not generator:FindFirstChildOfClass("Highlight") then
+					local highlight = Instance.new("Highlight")                            
+					local textColor = getHighlightColor("Machine")
+					local fillColor = getHighlightColor("Machine")
+					local statsFolder = generator:FindFirstChild("Stats")                            
+					local completed = statsFolder and statsFolder:FindFirstChild("Completed")                            
+					local currentAmount = statsFolder and statsFolder:FindFirstChild("CurrentAmount")                            
+					local requiredAmount = statsFolder and statsFolder:FindFirstChild("RequiredAmount")                            
+					local connie = statsFolder and statsFolder:FindFirstChild("Connie")
 
-						local function updateGeneratorAppearance()
-							if connie and connie.Value == true then
-								fillColor = getHighlightColor("PosessedMachine")
-								textColor = getHighlightColor("PosessedMachine")
-							elseif completed and completed.Value == true then
-								fillColor = getHighlightColor("CompletedMachine")
-								textColor = getHighlightColor("CompletedMachine")
-							else
-								fillColor = getHighlightColor("Machine")
-								textColor = getHighlightColor("Machine")
-							end
-
-							highlight.FillColor = fillColor
-							local billboard = generator:FindFirstChild("EspBillboardGUIName")                                
-							if billboard then
-								local label = billboard:FindFirstChildOfClass("TextLabel")                                    
-								if label then
-									label.TextColor3 = textColor
-									local generatorName = generator.Name
-									if connie and connie.Value == true then
-										generatorName = generatorName .. " (Possessed)"
-									end
-									label.Text = generatorName .. "\n(" .. (currentAmount and roundToInteger(currentAmount.Value) or 0) .. " / " .. (requiredAmount and requiredAmount.Value or 0) .. ")"
+					local function updateGeneratorAppearance()
+						if connie and connie.Value == true then
+							fillColor = getHighlightColor("PosessedMachine")
+							textColor = getHighlightColor("PosessedMachine")
+						elseif completed and completed.Value == true then
+							fillColor = getHighlightColor("CompletedMachine")
+							textColor = getHighlightColor("CompletedMachine")
+						else
+							fillColor = getHighlightColor("Machine")
+							textColor = getHighlightColor("Machine")
+						end
+						highlight.FillColor = fillColor
+						local billboard = generator:FindFirstChild("EspBillboardGUIName")                                
+						if billboard then
+							local label = billboard:FindFirstChildOfClass("TextLabel")                                    
+							if label then
+								label.TextColor3 = textColor
+								local generatorName = generator.Name
+								if connie and connie.Value == true then
+									generatorName = generatorName .. " (Possessed)"
 								end
+								label.Text = generatorName .. "\n(" .. (currentAmount and roundToInteger(currentAmount.Value) or 0) .. " / " .. (requiredAmount and requiredAmount.Value or 0) .. ")"
 							end
 						end
-
-						updateGeneratorAppearance()
-
-						-- Connect change events (same as before)
-						if connie then
-							connie:GetPropertyChangedSignal("Value"):Connect(updateGeneratorAppearance)
-						end
-
-						if completed then
-							completed:GetPropertyChangedSignal("Value"):Connect(updateGeneratorAppearance)
-						end
-
-						if currentAmount then
-							currentAmount:GetPropertyChangedSignal("Value"):Connect(updateGeneratorAppearance)
-						end
-
-						if requiredAmount then
-							requiredAmount:GetPropertyChangedSignal("Value"):Connect(updateGeneratorAppearance)
-						end
-
-						highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-						highlight.Enabled = highlightVisible
-						highlight.Parent = generator
-
-						createBillboardGui(generator, generator.Name, textColor, {
-							CurrentAmount = currentAmount and roundToInteger(currentAmount.Value) or 0,
-							RequiredAmount = requiredAmount and requiredAmount.Value or 0
-						})
 					end
+					updateGeneratorAppearance()
+
+					-- Connect change events (same as before)
+					if connie then
+						connie:GetPropertyChangedSignal("Value"):Connect(updateGeneratorAppearance)
+					end
+
+					if completed then
+						completed:GetPropertyChangedSignal("Value"):Connect(updateGeneratorAppearance)
+					end
+
+					if currentAmount then
+						currentAmount:GetPropertyChangedSignal("Value"):Connect(updateGeneratorAppearance)
+					end
+
+					if requiredAmount then
+						requiredAmount:GetPropertyChangedSignal("Value"):Connect(updateGeneratorAppearance)
+					end
+
+					highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+					highlight.Enabled = highlightVisible
+					highlight.Parent = generator
+
+					createBillboardGui(generator, generator.Name, textColor, {
+						CurrentAmount = currentAmount and roundToInteger(currentAmount.Value) or 0,
+						RequiredAmount = requiredAmount and requiredAmount.Value or 0
+					})
 				end
 			end
 		end
 	end
 
 function removeHighlights()
-	local currentRoom = workspace:FindFirstChild"CurrentRoom"
-
-	if currentRoom then
-		for _, model in pairs(currentRoom:GetChildren()) do
-			-- Remove highlights for Monsters, Items, and Generators
-			for _, folderName in pairs{"Monsters", "Items", "Generators"} do
-				local folder = model:FindFirstChild(folderName)
-				if folder then
-					for _, obj in pairs(folder:GetChildren()) do
-						local highlight = obj:FindFirstChildOfClass"Highlight"							
-						if highlight then
-							highlight:Destroy()
-						end
-						local billboard = obj:FindFirstChild"EspBillboardGUIName"							
-						if billboard then
-							billboard:Destroy()
-						end
+	if getMap() then
+		for _, folderName in pairs{"Monsters", "Items", "Generators"} do
+			local folder = getMap():FindFirstChild(folderName)
+			if folder then
+				for _, obj in pairs(folder:GetChildren()) do
+					local highlight = obj:FindFirstChildOfClass"Highlight"							
+					if highlight then
+						highlight:Destroy()
+					end
+					local billboard = obj:FindFirstChild"EspBillboardGUIName"							
+					if billboard then
+						billboard:Destroy()
 					end
 				end
 			end
-
-			-- Remove highlights for FakeElevator
-			local freeArea = model:FindFirstChild("FreeArea")
+			local freeArea = getMap():FindFirstChild("FreeArea")
 			if freeArea then
 				local fakeElevator = freeArea:FindFirstChild("FakeElevator")
 				if fakeElevator and fakeElevator:IsA("Model") then
@@ -5126,8 +4967,6 @@ function removeHighlights()
 			end
 		end
 	end
-
-	-- Remove highlights for Players
 	for _, player in pairs(noxious["players"]:GetPlayers()) do
 		if player.Character then
 			local highlight = player.Character:FindFirstChildOfClass"Highlight"				
@@ -5253,7 +5092,7 @@ function getModelCenter(model)
 	end
 	if #parts == 0 then return nil end
 
-	local totalPosition = Vector3.new(0, 0, 0)
+	local totalPosition = Vector3.zero
 	for _, part in pairs(parts) do
 		totalPosition = totalPosition + part.Position
 	end
@@ -5266,7 +5105,7 @@ function setupTracerGui()
 	tracerGui = Instance.new("ScreenGui")
 	tracerGui.Name = "TracerGui"
 	tracerGui.ResetOnSpawn = false
-	tracerGui.Parent = noxious["local player"]:FindFirstChild("PlayerGui") or noxious["local player"]:WaitForChild("PlayerGui")
+	tracerGui.Parent = noxious["player gui"]
 end
 
 -- Update the getHighlightColor function to match tween colors
@@ -5474,39 +5313,36 @@ function updateTracers()
 	end
 
 	-- Monsters with all special cases preserved
-	if tracerTypes.Monsters and currentRoom then
-		for _, model in pairs(currentRoom:GetChildren()) do
-			local monstersFolder = model:FindFirstChild("Monsters")
-			if monstersFolder then
-				for _, monster in pairs(monstersFolder:GetChildren()) do
-					if monster:IsA("Model") then
-						local center = getModelCenter(monster)
-						if center then
-							local screenPoint, onScreen = noxious["current camera"]:WorldToScreenPoint(center)
-							if onScreen then
-								local color
-								local monsterName = monster.Name
+	if tracerTypes.Monsters and getMap() then
+		local monstersFolder = getMap():FindFirstChild("Monsters")
+		if monstersFolder then
+			for _, monster in pairs(monstersFolder:GetChildren()) do
+				if monster:IsA("Model") then
+					local center = getModelCenter(monster)
+					if center then
+						local screenPoint, onScreen = noxious["current camera"]:WorldToScreenPoint(center)
+						if onScreen then
+							local color
+							local monsterName = monster.Name
 
 								-- Group 1: Red to Black monsters
-								if table.find({"AstroMonster", "VeeMonster", "SproutMonster", "PebbleMonster", "ShellyMonster", "DandyMonster"}, monsterName) then
-									local tweenProgress = math.abs(math.sin(tick() * 1.3))
-									color = Color3.fromRGB(255, 0, 0):Lerp(Color3.fromRGB(0, 0, 0), tweenProgress)
+							if table.find({"AstroMonster", "VeeMonster", "SproutMonster", "PebbleMonster", "ShellyMonster", "DandyMonster"}, monsterName) then
+								local tweenProgress = math.abs(math.sin(tick() * 1.3))
+								color = Color3.fromRGB(255, 0, 0):Lerp(Color3.fromRGB(0, 0, 0), tweenProgress)
 
-									-- Group 2: Light Green to Light Pink monsters
-								elseif table.find({"BassieMonster", "EggsonMonster", "FlyteMonster", "CocoaMonster"}, monsterName) then
-									local tweenProgress = math.abs(math.sin(tick() * 1.3))
-									color = Color3.fromRGB(140, 255, 140):Lerp(Color3.fromRGB(237, 121, 210), tweenProgress)
+							elseif table.find({"BassieMonster", "EggsonMonster", "FlyteMonster", "CocoaMonster"}, monsterName) then
+								local tweenProgress = math.abs(math.sin(tick() * 1.3))
+								color = Color3.fromRGB(140, 255, 140):Lerp(Color3.fromRGB(237, 121, 210), tweenProgress)
 
 									-- Default monster color
-								else
-									color = Color3.new(1, 0, 0) -- Solid red
-								end
-
-								table.insert(targets, {
-									position = Vector2.new(screenPoint.X, screenPoint.Y),
-									color = color
-								})
+							else
+								color = Color3.new(1, 0, 0) -- Solid red
 							end
+
+							table.insert(targets, {
+								position = Vector2.new(screenPoint.X, screenPoint.Y),
+								color = color
+							})
 						end
 					end
 				end
@@ -5562,22 +5398,20 @@ function updateTracers()
 	end
 
 	-- Updated item tracer section to use getItemColor
-	if tracerTypes.Items and currentRoom then
-		for _, model in pairs(currentRoom:GetChildren()) do
-			local itemsFolder = model:FindFirstChild("Items")
-			if itemsFolder then
-				for _, item in pairs(itemsFolder:GetChildren()) do
-					if item:IsA("Model") then
-						local center = getModelCenter(item)
-						if center then
-							local screenPoint, onScreen = noxious["current camera"]:WorldToScreenPoint(center)
-							if onScreen then
-								-- This will now return the exact same tween colors as the highlights
-								table.insert(targets, {
-									position = Vector2.new(screenPoint.X, screenPoint.Y),
-									color = getItemColor(item)
-								})
-							end
+	if tracerTypes.Items and getMap() then
+		local itemsFolder = getMap():FindFirstChild("Items")
+		if itemsFolder then
+			for _, item in pairs(itemsFolder:GetChildren()) do
+				if item:IsA("Model") then
+					local center = getModelCenter(item)
+					if center then
+						local screenPoint, onScreen = noxious["current camera"]:WorldToScreenPoint(center)
+						if onScreen then
+							-- This will now return the exact same tween colors as the highlights
+							table.insert(targets, {
+								position = Vector2.new(screenPoint.X, screenPoint.Y),
+								color = getItemColor(item)
+							})
 						end
 					end
 				end
@@ -5586,22 +5420,20 @@ function updateTracers()
 	end
 
 	-- Add machines (generators) from CurrentRoom.Generators folder
-	if tracerTypes.Machines and currentRoom then
-		for _, model in pairs(currentRoom:GetChildren()) do
-			local generatorsFolder = model:FindFirstChild("Generators")
-			if generatorsFolder then
-				for _, generator in pairs(generatorsFolder:GetChildren()) do
-					if generator:IsA("Model") then
-						local center = getModelCenter(generator)
-						if center then
-							local screenPoint, onScreen = noxious["current camera"]:WorldToScreenPoint(center)
-							if onScreen then
-								local color = getGeneratorColor(generator) -- Get generator-specific color
-								table.insert(targets, {
-									position = Vector2.new(screenPoint.X, screenPoint.Y),
-									color = color
-								})
-							end
+	if tracerTypes.Machines and getMap() then
+		local generatorsFolder = getMap():FindFirstChild("Generators")
+		if generatorsFolder then
+			for _, generator in pairs(generatorsFolder:GetChildren()) do
+				if generator:IsA("Model") then
+					local center = getModelCenter(generator)
+					if center then
+						local screenPoint, onScreen = noxious["current camera"]:WorldToScreenPoint(center)
+						if onScreen then
+							local color = getGeneratorColor(generator) -- Get generator-specific color
+							table.insert(targets, {
+								position = Vector2.new(screenPoint.X, screenPoint.Y),
+								color = color
+							})
 						end
 					end
 				end
@@ -5610,23 +5442,21 @@ function updateTracers()
 	end
 
 	-- Fake Elevator (now with yellow to black tween)
-	if tracerTypes.FakeElevator and currentRoom then
-		for _, model in pairs(currentRoom:GetChildren()) do
-			local freeArea = model:FindFirstChild("FreeArea")
-			if freeArea then
-				local fakeElevator = freeArea:FindFirstChild("FakeElevator")
-				if fakeElevator and fakeElevator:IsA("Model") then
-					local center = getModelCenter(fakeElevator)
-					if center then
-						local screenPoint, onScreen = noxious["current camera"]:WorldToScreenPoint(center)
-						if onScreen then
-							local tweenProgress = math.abs(math.sin(tick() * 1.4))
-							local color = Color3.fromRGB(255, 255, 0):Lerp(Color3.fromRGB(0, 0, 0), tweenProgress)
-							table.insert(targets, {
-								position = Vector2.new(screenPoint.X, screenPoint.Y),
-								color = color
-							})
-						end
+	if tracerTypes.FakeElevator and getMap() then
+		local freeArea = getMap():FindFirstChild("FreeArea")
+		if freeArea then
+			local fakeElevator = freeArea:FindFirstChild("FakeElevator")
+			if fakeElevator and fakeElevator:IsA("Model") then
+				local center = getModelCenter(fakeElevator)
+				if center then
+					local screenPoint, onScreen = noxious["current camera"]:WorldToScreenPoint(center)
+					if onScreen then
+						local tweenProgress = math.abs(math.sin(tick() * 1.4))
+						local color = Color3.fromRGB(255, 255, 0):Lerp(Color3.fromRGB(0, 0, 0), tweenProgress)
+						table.insert(targets, {
+							position = Vector2.new(screenPoint.X, screenPoint.Y),
+							color = color
+						})
 					end
 				end
 			end
@@ -5860,21 +5690,17 @@ end
 -- Main initialization
 if game.PlaceId == noxious["dandy's world run"] then
 	-- Handle existing monsters
-	local currentRoom = workspace:FindFirstChild("CurrentRoom")
-	if currentRoom then
-		for _, model in pairs(currentRoom:GetChildren()) do
-			local monstersFolder = model:FindFirstChild("Monsters")
-			if monstersFolder then
-				for _, monster in pairs(monstersFolder:GetChildren()) do
-					if monster:IsA("Model") then
-						task.spawn(visualizemonsterradii, monster)
-					end
+	if getMap() then
+		local monstersFolder = getMap():FindFirstChild("Monsters")
+		if monstersFolder then
+			for _, monster in pairs(monstersFolder:GetChildren()) do
+				if monster:IsA("Model") then
+					task.spawn(visualizemonsterradii, monster)
 				end
 			end
 		end
 	end
 
-	-- Monitor for new monsters
 	workspace.DescendantAdded:Connect(function(descendant)
 		if descendant.Name == "Monsters" and descendant:IsA("Folder") then
 			descendant.ChildAdded:Connect(function(monster)
@@ -5903,16 +5729,12 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function becomeDandy()
-	local player = noxious["local player"]
-	local character = player.Character or player.CharacterAdded:Wait()
-	character:WaitForChild"Head"		
-	local playerModel = workspace:FindFirstChild"Players"or workspace:FindFirstChild"InGamePlayers"
-
-	local toonName = playerModel and playerModel:FindFirstChild(player.Name) and playerModel[player.Name]:FindFirstChild"ToonName"
+	local toonName = noxious["local character"]:FindFirstChild"ToonName"
+	local config = noxious["local character"]:FindFirstChild"Config"	
+	local animate = noxious["local character"]:FindFirstChild"Animate"	
 
 	local characterName
-	if not toonName then
-		local config = playerModel and playerModel:FindFirstChild(player.Name) and playerModel[player.Name]:FindFirstChild"Config"			
+	if not toonName then		
 		local charNameValue = config and config:FindFirstChild"CharacterName"			
 		if charNameValue and charNameValue:IsA"StringValue"then
 			characterName = charNameValue.Value
@@ -5926,26 +5748,25 @@ function becomeDandy()
 
 	local Dandy, DHAir
 	if game.PlaceId == noxious["dandy's world run"] then
-		Dandy = workspace.Elevators.Elevator.DandyStore.DandyShop
-		DHAir = Dandy.Hair
+		Dandy = noxious["elevator"].DandyStore.DandyShop
 	elseif game.PlaceId == noxious["dandy's world lobby"] then
 		Dandy = workspace.DandyStore
-		DHAir = workspace.DandyStore.Hair
 	end
-
-	local CHAir = character:FindFirstChild"Hair"		
+	
+	DHair = Dandy.Hair
+	local CHAir = noxious["local character"].Hair	
 	for _, partA in ipairs(Dandy:GetDescendants()) do
-		local partB = character:FindFirstChild(partA.Name, true)
+		local partB = noxious["local character"]:FindFirstChild(partA.Name, true)
 		if partB then
-			DHAir.Parent = character
-			DHAir.Joint.Part0 = character.Head
+			DHAir.Parent = noxious["local character"]
+			DHAir.Joint.Part0 = noxious["local character"].Head
 			wait(0.01)
 
-			character.Animate.idle.Animation1.AnimationId = "rbxassetid://16496520991"
-			character.Animate.idle.Animation2.AnimationId = "rbxassetid://16496520991"
-			character.Animate.run.RunAnim.AnimationId = "rbxassetid://16496812530"
-			character.Config.NormalTexture.Texture = "rbxassetid://16496414911"
-			character.Config.HurtTexture.Texture = "rbxassetid://17561468145"
+			animate.idle.Animation1.AnimationId = "rbxassetid://16496520991"
+			animate.idle.Animation2.AnimationId = "rbxassetid://16496520991"
+			animate.run.RunAnim.AnimationId = "rbxassetid://16496812530"
+			config.NormalTexture.Texture = "rbxassetid://16496414911"
+			config.HurtTexture.Texture = "rbxassetid://17561468145"
 
 			if CHAir then
 				CHAir:Destroy()
@@ -5972,16 +5793,12 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function unablius()
-	local player = noxious["local player"]
-	local character = player.Character or player.CharacterAdded:Wait()
-	character:WaitForChild"Head"		
-	local playerModel = workspace:FindFirstChild"Players"or workspace:FindFirstChild"InGamePlayers"
-
-	local toonName = playerModel and playerModel:FindFirstChild(player.Name) and playerModel[player.Name]:FindFirstChild"ToonName"
+	local toonName = noxious["local character"]:FindFirstChild"ToonName"
+	local config = noxious["local character"]:FindFirstChild"Config"	
+	local animate = noxious["local character"]:FindFirstChild"Animate"	
 
 	local characterName
-	if not toonName then
-		local config = playerModel and playerModel:FindFirstChild(player.Name) and playerModel[player.Name]:FindFirstChild"Config"			
+	if not toonName then		
 		local charNameValue = config and config:FindFirstChild"CharacterName"			
 		if charNameValue and charNameValue:IsA"StringValue"then
 			characterName = charNameValue.Value
@@ -5995,26 +5812,25 @@ function unablius()
 
 	local Dandy, DHAir
 	if game.PlaceId == noxious["dandy's world run"] then
-		Dandy = workspace.Elevators.Elevator.DandyStore.DandyShop
-		DHAir = Dandy.Hair
+		Dandy = noxious["elevator"].DandyStore.DandyShop
 	elseif game.PlaceId == noxious["dandy's world lobby"] then
 		Dandy = workspace.DandyStore
-		DHAir = workspace.DandyStore.Hair
 	end
-
-	local CHAir = character.Hair
+	
+	DHair = Dandy.Hair
+	local CHAir = noxious["local character"].Hair
 
 	for _, partA in ipairs(Dandy:GetDescendants()) do
-		local partB = character:FindFirstChild(partA.Name, true)
+		local partB = noxious["local character"]:FindFirstChild(partA.Name, true)
 		if partB then
-			DHAir.Parent = character
-			DHAir.Joint.Part0 = character.Head
+			DHAir.Parent = noxious["local character"]
+			DHAir.Joint.Part0 = noxious["local character"].Head
 			wait(0.01)
-			character.Animate.idle.Animation1.AnimationId = "rbxassetid://16496520991"
-			character.Animate.idle.Animation2.AnimationId = "rbxassetid://16496520991"
-			character.Animate.run.RunAnim.AnimationId = "rbxassetid://16496812530"
-			character.Config.NormalTexture.Texture = "rbxassetid://16496414911"
-			character.Config.HurtTexture.Texture = "rbxassetid://17561468145"
+			animate.idle.Animation1.AnimationId = "rbxassetid://16496520991"
+			animate.idle.Animation2.AnimationId = "rbxassetid://16496520991"
+			animate.run.RunAnim.AnimationId = "rbxassetid://16496812530"
+			config.NormalTexture.Texture = "rbxassetid://16496414911"
+			config.HurtTexture.Texture = "rbxassetid://17561468145"
 
 			CHAir:Destroy()
 			wait(0.01)
@@ -6043,31 +5859,28 @@ local isfullbrightlooping = false
 local fullbrightloopconnection
 local originalSettings = {}
 
-function saveOriginalSettings()
-	local Lighting = game:GetService"Lighting"		
-	originalSettings.Brightness = Lighting.Brightness
-	originalSettings.ClockTime = Lighting.ClockTime
-	originalSettings.FogEnd = Lighting.FogEnd
-	originalSettings.GlobalShadows = Lighting.GlobalShadows
-	originalSettings.OutdoorAmbient = Lighting.OutdoorAmbient
+function saveOriginalSettings()	
+	noxious["lighting"].Brightness = Lighting.Brightness
+	noxious["lighting"].ClockTime = Lighting.ClockTime
+	noxious["lighting"].FogEnd = Lighting.FogEnd
+	noxious["lighting"].GlobalShadows = Lighting.GlobalShadows
+	noxious["lighting"].OutdoorAmbient = Lighting.OutdoorAmbient
 end
 
-function restoreOriginalSettings()
-	local Lighting = game:GetService"Lighting"		
-	Lighting.Brightness = originalSettings.Brightness
-	Lighting.ClockTime = originalSettings.ClockTime
-	Lighting.FogEnd = originalSettings.FogEnd
-	Lighting.GlobalShadows = originalSettings.GlobalShadows
-	Lighting.OutdoorAmbient = originalSettings.OutdoorAmbient
+function restoreOriginalSettings()	
+	noxious["lighting"].Brightness = originalSettings.Brightness
+	noxious["lighting"].ClockTime = originalSettings.ClockTime
+	noxious["lighting"].FogEnd = originalSettings.FogEnd
+	noxious["lighting"].GlobalShadows = originalSettings.GlobalShadows
+	noxious["lighting"].OutdoorAmbient = originalSettings.OutdoorAmbient
 end
 
-function fullBright()
-	local Lighting = game:GetService"Lighting"		
-	Lighting.Brightness = 2
-	Lighting.ClockTime = 14
-	Lighting.FogEnd = 100000
-	Lighting.GlobalShadows = false
-	Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+function fullBright()	
+	noxious["lighting"].Brightness = 2
+	noxious["lighting"].ClockTime = 14
+	noxious["lighting"].FogEnd = 100000
+	noxious["lighting"].GlobalShadows = false
+	noxious["lighting"].OutdoorAmbient = Color3.fromRGB(128, 128, 128)
 end
 
 function enableFullBright()
@@ -6105,10 +5918,10 @@ function enablealternativefullbright()
 
 	fullBrightLoop = noxious["run service"].RenderStepped:Connect(function()
 		if alternativeFullBrightEnabled then
-			game.Lighting.Brightness = 2
-			game.Lighting.FogEnd = 100000
-			game.Lighting.GlobalShadows = false
-			game.Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+			noxious["lighting"].Brightness = 2
+			noxious["lighting"].FogEnd = 100000
+			noxious["lighting"].GlobalShadows = false
+			noxious["lighting"].OutdoorAmbient = Color3.fromRGB(128, 128, 128)
 		end
 	end)
 end
@@ -6129,7 +5942,6 @@ end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
-local player = noxious["local player"]
 local humanoid
 local animationTracks = {}
 local loopStates = {}
@@ -6139,46 +5951,18 @@ local character
 -- Function to continuously scan for character in both locations
 function monitorCharacter()
 	while true do
-		-- First check InGamePlayers
-		local inGameFolder = workspace:FindFirstChild("InGamePlayers")
-		if inGameFolder then
-			local inGameChar = inGameFolder:FindFirstChild(player.Name)
-			if inGameChar then
-				character = inGameChar
-				break
+		local config = noxious["local character"] and noxious["local character"]:FindFirstChild("Animations")
+		if config then
+			for _, anim in ipairs(config:GetChildren()) do
+				if anim:IsA("Animation") then
+					local track = noxious["local humanoid"]:LoadAnimation(anim)
+					animationTracks[anim.Name] = track
+					loopStates[anim.Name] = false
+				end
 			end
-		end
-
-		-- Then check regular character
-		if player.Character then
-			character = player.Character
 			break
 		end
-
-		-- Wait a short time before checking again
-		task.wait(0.5)
-	end
-
-	-- Once character is found, set up humanoid and animations
-	humanoid = character:WaitForChild("Humanoid")
-
-	if game.PlaceId ~= noxious["test game"] then
-		-- Continuously check for animations config
-		while true do
-			config = character:FindFirstChild("Animations")
-			if config then
-				-- Register animations
-				for _, anim in ipairs(config:GetChildren()) do
-					if anim:IsA("Animation") then
-						local track = humanoid:LoadAnimation(anim)
-						animationTracks[anim.Name] = track
-						loopStates[anim.Name] = false
-					end
-				end
-				break
-			end
-			task.wait(0.25)
-		end
+		task.wait(0.25)
 	end
 end
 
@@ -6293,6 +6077,23 @@ function isAnimationPlaying(character, animationId)
 	return false
 end
 
+function tweenBehindTarget(player, targetPlayer, baseOffset, connectionKey)
+	local character = player.Character
+	local targetCharacter = targetPlayer.Character
+	if character and targetCharacter then
+		local targetRoot = targetCharacter:FindFirstChild"HumanoidRootPart"			
+		local playerRoot = character:FindFirstChild"HumanoidRootPart"			
+		if targetRoot and playerRoot then
+			local offset = baseOffset
+			if (connectionKey == "hsit" or connectionKey == "hjump") and isAnimationPlaying(targetCharacter, "16873659196") then
+				local yOffset = 3.7 -- Y-axis offset
+				offset = CFrame.new(baseOffset.X, yOffset, baseOffset.Z)
+			end
+			tweenplr(targetRoot.CFrame * offset)
+		end
+	end
+end
+
 function teleportBehindTarget(player, targetPlayer, baseOffset, connectionKey)
 	local character = player.Character
 	local targetCharacter = targetPlayer.Character
@@ -6301,14 +6102,11 @@ function teleportBehindTarget(player, targetPlayer, baseOffset, connectionKey)
 		local playerRoot = character:FindFirstChild"HumanoidRootPart"			
 		if targetRoot and playerRoot then
 			local offset = baseOffset
-
-			-- Apply randomized Y offset only for "hsit" and "hjump"
 			if (connectionKey == "hsit" or connectionKey == "hjump") and isAnimationPlaying(targetCharacter, "16873659196") then
 				local yOffset = 3.7 -- Y-axis offset
 				offset = CFrame.new(baseOffset.X, yOffset, baseOffset.Z)
 			end
-
-			playerRoot.CFrame = targetRoot.CFrame * offset
+			teleportplr(targetRoot.CFrame * offset)
 		end
 	end
 end
@@ -6325,7 +6123,6 @@ end
 function handleTeleportCommand(command, player, animationId, offset, connectionKey)
 	local targetName = command:match("^" .. connectionKey .. "%s+(%S+)$")
 	local targetPlayer
-
 	if targetName then
 		if targetName:lower() == "random" then
 			local players = noxious["players"]:GetPlayers()
@@ -6336,7 +6133,6 @@ function handleTeleportCommand(command, player, animationId, offset, connectionK
 			targetPlayer = findPlayerByPartialName(targetName)
 		end
 	end
-
 	if targetPlayer then
 		workspace.Gravity = 0
 		playAnimation(player.Character, animationId, connectionKey)
@@ -6361,19 +6157,14 @@ function handleStopCommand(connectionKey)
 		teleportConnections[connectionKey]:Disconnect()
 		teleportConnections[connectionKey] = nil
 	end
-
 	if currentAnimationTracks[connectionKey] then
 		currentAnimationTracks[connectionKey]:Stop()
 		currentAnimationTracks[connectionKey] = nil
 	end
-
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local humanoid = character:WaitForChild"Humanoid"
-
-	local animate = character:FindFirstChild"Animate"		
+	local animate = noxious["local character"]:FindFirstChild"Animate"		
 	if animate then
 		animate.Disabled = true
-		for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
+		for _, track in ipairs(noxious["local humanoid"].Animator:GetPlayingAnimationTracks()) do
 			track:Stop()
 		end
 		animate.Disabled = false
@@ -6502,153 +6293,87 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function dwhbang(command)
-
 	local HeadbangAnim = Instance.new"Animation"		
 	HeadbangAnim.AnimationId = "rbxassetid://17561277632"
-
-	local humanoid = noxious["local player"].Character and noxious["local player"].Character:FindFirstChildOfClass"Humanoid"		
-	if humanoid then
-		if currentAnimationTrack then
-			currentAnimationTrack:Stop()
-		end
-
-		currentAnimationTrack = humanoid:LoadAnimation(HeadbangAnim)
-		currentAnimationTrack:Play()
-
-		currentAnimationTrack:AdjustWeight(999)
-	end
+	if currentAnimationTrack then currentAnimationTrack:Stop() end
+	currentAnimationTrack = noxious["local humanoid"]:LoadAnimation(HeadbangAnim)
+	currentAnimationTrack:Play()
+	currentAnimationTrack:AdjustWeight(999)
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
 function dwdance(command)
-
 	local DanceAnim = Instance.new"Animation"		
 	DanceAnim.AnimationId = "rbxassetid://17516071317"
-
-	local humanoid = noxious["local player"].Character and noxious["local player"].Character:FindFirstChildOfClass"Humanoid"		
-	if humanoid then
-		if currentAnimationTrack then
-			currentAnimationTrack:Stop()
-		end
-
-		currentAnimationTrack = humanoid:LoadAnimation(DanceAnim)
-		currentAnimationTrack:Play()
-
-		currentAnimationTrack:AdjustWeight(999)
-	end
+	if currentAnimationTrack then currentAnimationTrack:Stop() end
+	currentAnimationTrack = noxious["local humanoid"]:LoadAnimation(DanceAnim)
+	currentAnimationTrack:Play()
+	currentAnimationTrack:AdjustWeight(999)
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
 function dwcrawl(command)
-
 	local TherianAnim = Instance.new"Animation"		
 	TherianAnim.AnimationId = "rbxassetid://91029796934547"
-
-	local humanoid = noxious["local player"].Character and noxious["local player"].Character:FindFirstChildOfClass"Humanoid"		
-	if humanoid then
-		if currentAnimationTrack then
-			currentAnimationTrack:Stop()
-		end
-
-		currentAnimationTrack = humanoid:LoadAnimation(TherianAnim)
-		currentAnimationTrack:Play()
-
-		currentAnimationTrack:AdjustWeight(999)
-	end
+	if currentAnimationTrack then currentAnimationTrack:Stop() end
+	currentAnimationTrack = noxious["local humanoid"]:LoadAnimation(TherianAnim)
+	currentAnimationTrack:Play()
+	currentAnimationTrack:AdjustWeight(999)
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
 function dwtherian(command)
-
 	local TherianAnim = Instance.new"Animation"		
 	TherianAnim.AnimationId = "rbxassetid://17649190982"
-
-	local humanoid = noxious["local player"].Character and noxious["local player"].Character:FindFirstChildOfClass"Humanoid"		
-	if humanoid then
-		if currentAnimationTrack then
-			currentAnimationTrack:Stop()
-		end
-
-		currentAnimationTrack = humanoid:LoadAnimation(TherianAnim)
-		currentAnimationTrack:Play()
-
-		currentAnimationTrack:AdjustWeight(999)
-	end
+	if currentAnimationTrack then currentAnimationTrack:Stop() end
+	currentAnimationTrack = noxious["local humanoid"]:LoadAnimation(TherianAnim)
+	currentAnimationTrack:Play()
+	currentAnimationTrack:AdjustWeight(999)
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
 function dwsit(command)
-
 	local SitAnim = Instance.new"Animation"		
 	SitAnim.AnimationId = "rbxassetid://18989418012"
-
-	local humanoid = noxious["local player"].Character and noxious["local player"].Character:FindFirstChildOfClass"Humanoid"		
-	if humanoid then
-		if currentAnimationTrack then
-			currentAnimationTrack:Stop()
-		end
-
-		currentAnimationTrack = humanoid:LoadAnimation(SitAnim)
-		currentAnimationTrack:Play()
-
-		currentAnimationTrack:AdjustWeight(999)
-	end
+	if currentAnimationTrack then currentAnimationTrack:Stop() end
+	currentAnimationTrack = noxious["local humanoid"]:LoadAnimation(SitAnim)
+	currentAnimationTrack:Play()
+	currentAnimationTrack:AdjustWeight(999)
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
 function dwpounce(command)
-
 	local PounceAnim = Instance.new"Animation"		
 	PounceAnim.AnimationId = "rbxassetid://17617839395"
-
-	local humanoid = noxious["local player"].Character and noxious["local player"].Character:FindFirstChildOfClass"Humanoid"		
-	if humanoid then
-		if currentAnimationTrack then
-			currentAnimationTrack:Stop()
-		end
-
-		currentAnimationTrack = humanoid:LoadAnimation(PounceAnim)
-		currentAnimationTrack:Play()
-
-		currentAnimationTrack:AdjustWeight(999)
-	end
+	if currentAnimationTrack then currentAnimationTrack:Stop() end
+	currentAnimationTrack = noxious["local humanoid"]:LoadAnimation(PounceAnim)
+	currentAnimationTrack:Play()
+	currentAnimationTrack:AdjustWeight(999)
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
 function dwsit2(command)
-
 	local Sit2Anim = Instance.new"Animation"		
 	Sit2Anim.AnimationId = "rbxassetid://16873659196"
-
-	local humanoid = noxious["local player"].Character and noxious["local player"].Character:FindFirstChildOfClass"Humanoid"		
-	if humanoid then
-		if currentAnimationTrack then
-			currentAnimationTrack:Stop()
-		end
-
-		currentAnimationTrack = humanoid:LoadAnimation(Sit2Anim)
-		currentAnimationTrack:Play()
-
-		currentAnimationTrack:AdjustWeight(999)
-	end
+	if currentAnimationTrack then currentAnimationTrack:Stop() end
+	currentAnimationTrack = noxious["local humanoid"]:LoadAnimation(Sit2Anim)
+	currentAnimationTrack:Play()
+	currentAnimationTrack:AdjustWeight(999)
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
 function dwunhbang(command)
-	local Char = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local Human = Char and Char:WaitForChild("Humanoid", 15)
-	local Animate = Char and Char:WaitForChild("Animate", 15)
-
+	local Animate = noxious["local character"]:WaitForChild("Animate", 15)
 	if Animate then
 		Animate.Disabled = true
-		for _, v in ipairs(Human:GetPlayingAnimationTracks()) do
+		for _, v in ipairs(noxious["local humanoid"].Animator:GetPlayingAnimationTracks()) do
 			v:Stop()
 		end
 		Animate.Disabled = false
@@ -6658,13 +6383,10 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function dwunsit2(command)
-	local Char = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local Human = Char and Char:WaitForChild("Humanoid", 15)
-	local Animate = Char and Char:WaitForChild("Animate", 15)
-
+	local Animate = noxious["local character"]:WaitForChild("Animate", 15)
 	if Animate then
 		Animate.Disabled = true
-		for _, v in ipairs(Human:GetPlayingAnimationTracks()) do
+		for _, v in ipairs(noxious["local humanoid"].Animator:GetPlayingAnimationTracks()) do
 			v:Stop()
 		end
 		Animate.Disabled = false
@@ -6674,13 +6396,10 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function dwundance(command)
-	local Char = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local Human = Char and Char:WaitForChild("Humanoid", 15)
-	local Animate = Char and Char:WaitForChild("Animate", 15)
-
+	local Animate = noxious["local character"]:WaitForChild("Animate", 15)
 	if Animate then
 		Animate.Disabled = true
-		for _, v in ipairs(Human:GetPlayingAnimationTracks()) do
+		for _, v in ipairs(noxious["local humanoid"].Animator:GetPlayingAnimationTracks()) do
 			v:Stop()
 		end
 		Animate.Disabled = false
@@ -6690,13 +6409,10 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function dwuncrawl(command)
-	local Char = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local Human = Char and Char:WaitForChild("Humanoid", 15)
-	local Animate = Char and Char:WaitForChild("Animate", 15)
-
+	local Animate = noxious["local character"]:WaitForChild("Animate", 15)
 	if Animate then
 		Animate.Disabled = true
-		for _, v in ipairs(Human:GetPlayingAnimationTracks()) do
+		for _, v in ipairs(noxious["local humanoid"].Animator:GetPlayingAnimationTracks()) do
 			v:Stop()
 		end
 		Animate.Disabled = false
@@ -6706,13 +6422,10 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function dwuntherian(command)
-	local Char = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local Human = Char and Char:WaitForChild("Humanoid", 15)
-	local Animate = Char and Char:WaitForChild("Animate", 15)
-
+	local Animate = noxious["local character"]:WaitForChild("Animate", 15)
 	if Animate then
 		Animate.Disabled = true
-		for _, v in ipairs(Human:GetPlayingAnimationTracks()) do
+		for _, v in ipairs(noxious["local humanoid"].Animator:GetPlayingAnimationTracks()) do
 			v:Stop()
 		end
 		Animate.Disabled = false
@@ -6721,16 +6434,12 @@ end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
-noxious["local player"].CharacterAdded:Connect(updateCharacterReferences)
 
 function dwunsit(command)
-	local Char = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local Human = Char and Char:WaitForChild("Humanoid", 15)
-	local Animate = Char and Char:WaitForChild("Animate", 15)
-
+	local Animate = noxious["local character"]:WaitForChild("Animate", 15)
 	if Animate then
 		Animate.Disabled = true
-		for _, v in ipairs(Human:GetPlayingAnimationTracks()) do
+		for _, v in ipairs(noxious["local humanoid"].Animator:GetPlayingAnimationTracks()) do
 			v:Stop()
 		end
 		Animate.Disabled = false
@@ -6766,37 +6475,21 @@ local lastPanicState = false
 
 function dweatpte()            
 	local infoFolder = workspace:FindFirstChild("Info")
-
 	if infoFolder then
 		local panicBool = infoFolder:FindFirstChild("Panic")            
 		if panicBool and panicBool:IsA("BoolValue") then
 			if not heartbeatConnection or not heartbeatConnection.Connected then
 				heartbeatConnection = noxious["run service"].Heartbeat:Connect(function()
-					-- Check if panic state changed
 					if lastPanicState ~= panicBool.Value then
 						lastPanicState = panicBool.Value
-						-- Reset hasTeleported when panic is disabled
 						if not panicBool.Value then
 							hasTeleported = false
 						end
 					end
 
 					if teleportEnabled and panicBool.Value == true and not hasTeleported then
-						local elevatorsFolder = workspace:FindFirstChild("Elevators")                            
-						if elevatorsFolder then
-							local elevatorModel = elevatorsFolder:FindFirstChildWhichIsA("Model")                                
-							if elevatorModel then
-								local monsterBlocker = elevatorModel:FindFirstChild("MonsterBlocker")                                    
-								if monsterBlocker and monsterBlocker:IsA("Part") then
-									local character = noxious["local player"].Character
-									if character and character:FindFirstChild("HumanoidRootPart") then
-										local offsetCFrame = monsterBlocker.CFrame * CFrame.new(0, -10.5, 0)
-										character.HumanoidRootPart.CFrame = offsetCFrame
-										hasTeleported = true -- only teleport once
-									end
-								end
-							end
-						end
+						teleportplr(noxious["elevator cframe"])
+						hasTeleported = true
 					end
 				end)
 			end
@@ -6816,24 +6509,11 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function dwtpte()
-	local elevatorsFolder = workspace:FindFirstChild"Elevators"
+	teleportplr(noxious["elevator cframe"])
+end
 
-	if elevatorsFolder then
-		local elevatorModel = elevatorsFolder:FindFirstChildWhichIsA"Model"
-
-		if elevatorModel then
-			local monsterBlocker = elevatorModel:FindFirstChild"MonsterBlocker"
-
-			if monsterBlocker and monsterBlocker:IsA"Part"then
-				local character = noxious["local player"].Character
-				if character and character:FindFirstChild"HumanoidRootPart"then
-					-- Apply the offset to the CFrame
-					local offsetCFrame = monsterBlocker.CFrame * CFrame.new(0, -10.5, 0)
-					character.HumanoidRootPart.CFrame = offsetCFrame
-				end
-			end
-		end
-	end
+function dwtwte()
+	tweenplr(noxious["elevator cframe"])
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
@@ -6969,7 +6649,7 @@ function test()
 
 	replaceTextInWorkspace()
 
-	for _, gui in pairs(noxious["local player"].PlayerGui:GetDescendants()) do
+	for _, gui in pairs(noxious["player gui"]:GetDescendants()) do
 		replaceTextInGui(gui)
 	end
 
@@ -7007,7 +6687,7 @@ function test()
 
 	addBillboardGuis()
 
-	local lighting = game:GetService"Lighting"
+	local lighting = noxious["lighting"]
 
 	local sky = lighting:FindFirstChildOfClass"Sky"or Instance.new"Sky"
 
@@ -7024,46 +6704,31 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function tptoadminroom()
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild"HumanoidRootPart"		
-	local targetPosition = Vector3.new(-43, 21, 24)
-	humanoidRootPart.CFrame = CFrame.new(targetPosition)
+	teleportplr(CFrame.new(targetPosition))
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
 function tptobedroom()
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild"HumanoidRootPart"		
-	local targetPosition = Vector3.new(-175, 8, 49)
-	humanoidRootPart.CFrame = CFrame.new(targetPosition)
+	teleportplr(CFrame.new(targetPosition))
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
 function tptodandysshop()
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild"HumanoidRootPart"		
-	local targetPosition = Vector3.new(-19, 21, 17)
-	humanoidRootPart.CFrame = CFrame.new(targetPosition)
+	teleportplr(CFrame.new(targetPosition))
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
 function tptostage()
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild"HumanoidRootPart"		
-	local targetPosition = Vector3.new(-3, 33, 492)
-	humanoidRootPart.CFrame = CFrame.new(targetPosition)
+	teleportplr(CFrame.new(targetPosition))
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
 function tptoboxofdoom()
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild"HumanoidRootPart"		
-	local targetPosition = Vector3.new(-215, 3, -215)
-	humanoidRootPart.CFrame = CFrame.new(targetPosition)
+	teleportplr(CFrame.new(targetPosition))
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
@@ -7072,9 +6737,9 @@ function showadminpanel()
 
 	if game.PlaceId == noxious["dandy's world lobby"] then
 
-		local devframe = game.ReplicatedStorage.Admin.DevFrame
+		local devframe = noxious["replicated storage"].Admin.DevFrame
 		devframe.Frame.Visible = true
-		devframe.Frame.Parent = noxious["local player"].PlayerGui.MainGui
+		devframe.Frame.Parent = noxious["player gui"].MainGui
 	end
 
 	if game.PlaceId == noxious["dandy's world run"] then
@@ -7088,8 +6753,8 @@ function showadminpanel()
 			end
 		end
 
-		if noxious["local player"] and noxious["local player"]:FindFirstChild"PlayerGui"then
-			for _, screenGui in ipairs(noxious["local player"].PlayerGui:GetChildren()) do
+		if noxious["local player"] and noxious["player gui"] then
+			for _, screenGui in ipairs(noxious["player gui"]:GetChildren()) do
 				if screenGui:IsA"ScreenGui"then
 					local devFrame = screenGui:FindFirstChild"DevFrame"						
 					if devFrame and devFrame:IsA"Frame"then
@@ -7106,9 +6771,9 @@ function hideadminpanel()
 
 	if game.PlaceId == noxious["dandy's world lobby"] then
 
-		local devframe = noxious["local player"].PlayerGui.MainGui
+		local devframe = noxious["player gui"].MainGui
 		devframe.Frame.Visible = false
-		devframe.Frame.Parent = game.ReplicatedStorage.Admin.DevFrame
+		devframe.Frame.Parent = noxious["replicated storage"].Admin.DevFrame
 	end
 
 	if game.PlaceId == noxious["dandy's world run"] then
@@ -7122,8 +6787,8 @@ function hideadminpanel()
 			end
 		end
 
-		if noxious["local player"] and noxious["local player"]:FindFirstChild"PlayerGui"then
-			for _, screenGui in ipairs(noxious["local player"].PlayerGui:GetChildren()) do
+		if noxious["local player"] and noxious["player gui"] then
+			for _, screenGui in ipairs(noxious["player gui"]:GetChildren()) do
 				if screenGui:IsA"ScreenGui"then
 					local devFrame = screenGui:FindFirstChild"DevFrame"						
 					if devFrame and devFrame:IsA"Frame"then
@@ -7146,37 +6811,31 @@ end
 
 -- Function to delete invisible borders
 function dib()
-	local currentRoom = workspace:FindFirstChild("CurrentRoom")
-
-	if currentRoom then
-		local model = currentRoom:FindFirstChildOfClass("Model")
-
-		if model then
-			local freeArea = model:FindFirstChild("FreeArea")
-			if freeArea then
-				for _, child in ipairs(freeArea:GetChildren()) do
-					if child:IsA("Part") and (child.Name == "InvisBorder" or child.Name == "InvisibleWall") then
-						child:Destroy()
-					end
+	if getMap() then
+		local freeArea = getMap():FindFirstChild("FreeArea")
+		if freeArea then
+			for _, child in ipairs(freeArea:GetChildren()) do
+				if child:IsA("Part") and (child.Name == "InvisBorder" or child.Name == "InvisibleWall") then
+					child:Destroy()
 				end
 			end
+		end
 
-			local generatedBorders = model:FindFirstChild("GeneratedBorders")
-			if generatedBorders then
-				generatedBorders:Destroy()
-			end
+		local generatedBorders = getMap():FindFirstChild("GeneratedBorders")
+		if generatedBorders then
+			generatedBorders:Destroy()
+		end
 
-			local borders = model:FindFirstChild("Borders")
-			if borders then
-				borders:Destroy()
-			end
+		local borders = getMap():FindFirstChild("Borders")
+		if borders then
+			borders:Destroy()
+		end
 
-			local walls = model:FindFirstChild("Walls")
-			if walls then
-				for _, child in ipairs(walls:GetChildren()) do
-					if child:IsA("Part") and child.Name == "InvisibleWall" then
-						child:Destroy()
-					end
+		local walls = getMap():FindFirstChild("Walls")
+		if walls then
+			for _, child in ipairs(walls:GetChildren()) do
+				if child:IsA("Part") and child.Name == "InvisibleWall" then
+					child:Destroy()
 				end
 			end
 		end
@@ -7197,8 +6856,7 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function antipopups()
-	local popup = noxious["local player"].PlayerGui.ScreenGui:FindFirstChild"PopUp"
-
+	local popup = noxious["player gui"].ScreenGui:FindFirstChild"PopUp"
 	if popup then
 		popup:Destroy()
 	end
@@ -7213,9 +6871,8 @@ function toggleHandling(state)
 end
 
 function handleSkillCheck()
-	local VIM = game:GetService'VirtualInputManager'		
 	local tl = 5
-	local screengui = noxious["local player"].PlayerGui:FindFirstChild"ScreenGui"		
+	local screengui = noxious["player gui"]:FindFirstChild"ScreenGui"		
 	if not screengui then
 		return
 	end
@@ -7242,7 +6899,7 @@ function handleSkillCheck()
 
 				if markerPosition.X >= goldAreaPosition.X and markerPosition.X <= (goldAreaPosition.X + goldAreaSize.X) + tl then
 					-- Send spacebar press event
-					VIM:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+					noxious["virtual input manager"]:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
 				end
 			end
 		end
@@ -7280,91 +6937,27 @@ toggleHandling(false)
 -------------------------------------------------------------------------------------------------------------------------------
 
 function tptool()	
-	local speaker = noxious["local player"]
 	local IYMouse = noxious["local player"]:GetMouse()
-	local TpTool = Instance.new"Tool"
-
+	local TpTool = Instance.new("Tool", noxious["local player"].Backpack)
 	TpTool.Name = "teleport tool"
 	TpTool.RequiresHandle = false
-	TpTool.Parent = speaker.Backpack
 	TpTool.Activated:Connect(function()
-		local Char = speaker.Character or workspace:FindFirstChild(speaker.Name)
-		local HRP = Char and Char:FindFirstChild"HumanoidRootPart"			
-		HRP.CFrame = CFrame.new(IYMouse.Hit.X, IYMouse.Hit.Y + 3, IYMouse.Hit.Z, select(4, HRP.CFrame:components()))
+		teleportplr(CFrame.new(IYMouse.Hit.X, IYMouse.Hit.Y + 3, IYMouse.Hit.Z, select(4, HRP.CFrame:components())))
 	end)
-
-	game:GetService"StarterGui":SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, true)
+	noxious["starter gui"]:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, true)
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
 function enablejumping()
-	spawn(function()
-		local touchGui = noxious["local player"]:WaitForChild"PlayerGui":WaitForChild"TouchGui"		
-		local touchControlFrame = touchGui:FindFirstChild"TouchControlFrame"		
-		local jumpButton = touchControlFrame and touchControlFrame:FindFirstChild"JumpButton"
-
-		local touchGui = noxious["local player"]:WaitForChild"PlayerGui":WaitForChild"TouchGui"
-		touchGui:WaitForChild"TouchControlFrame"
-
-		local mainGui = noxious["local player"]:WaitForChild"PlayerGui":WaitForChild"MainGui"			
-		local menu = mainGui:WaitForChild"Menu"			
-		local inviteButton = menu:WaitForChild"InviteButton"			
-		local infoButton = menu:WaitForChild"InfoButton"			
-		local settingsButton = menu:WaitForChild"SettingsButton"
-
-		jumpButton.Visible = true
-		inviteButton.Visible = false
-		infoButton.Visible = false
-		settingsButton.Visible = false
-	end)
-
-	spawn(function()
-		local humanoid = character:WaitForChild"Humanoid"		
-		humanoid.JumpPower = 50.145
-		humanoid.JumpHeight = 7.2
-
-		noxious["local player"].CharacterAdded:Connect(function(newCharacter)
-			local newHumanoid = newCharacter:WaitForChild"Humanoid"			
-			newHumanoid.JumpPower = 50.145
-			newHumanoid.JumpHeight = 7.2
-		end)
-	end)
-
+	noxious["local humanoid"].JumpPower = 50.145
+	noxious["local humanoid"].JumpHeight = 7.2
 	notify("Spam jumping can trigger anticheat.", 5, "warning")
 end
 
 function disablejumping()
-	spawn(function()
-		local touchGui = noxious["local player"]:WaitForChild"PlayerGui":WaitForChild"TouchGui"		
-		local touchControlFrame = touchGui:FindFirstChild"TouchControlFrame"		
-		local jumpButton = touchControlFrame and touchControlFrame:FindFirstChild"JumpButton"
-
-		local touchGui = noxious["local player"]:WaitForChild"PlayerGui":WaitForChild"TouchGui"
-		touchGui:WaitForChild"TouchControlFrame"
-		local mainGui = noxious["local player"]:WaitForChild"PlayerGui":WaitForChild"MainGui"			
-		local menu = mainGui:WaitForChild"Menu"			
-		local inviteButton = menu:WaitForChild"InviteButton"			
-		local infoButton = menu:WaitForChild"InfoButton"			
-		local settingsButton = menu:WaitForChild"SettingsButton"
-
-		jumpButton.Visible = false
-		inviteButton.Visible = true
-		infoButton.Visible = true
-		settingsButton.Visible = true
-	end)
-
-	spawn(function()
-		local humanoid = character:WaitForChild"Humanoid"		
-		humanoid.JumpPower = 0
-		humanoid.JumpHeight = 0
-
-		noxious["local player"].CharacterAdded:Connect(function(newCharacter)
-			local newHumanoid = newCharacter:WaitForChild"Humanoid"			
-			newHumanoid.JumpPower = 0
-			newHumanoid.JumpHeight = 0
-		end)
-	end)
+	noxious["local humanoid"].JumpPower = 0
+	noxious["local humanoid"].JumpHeight = 0
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
@@ -7373,21 +6966,15 @@ local scriptEnabled = false
 
 function enableglitchednametag()
 	local playerName = noxious["local player"].Name
-
-	local playersFolder = workspace:FindFirstChild"Players"or workspace:FindFirstChild"InGamePlayers"		
-	local playerModel = playersFolder and playersFolder:FindFirstChild(playerName)
-
-	if game.PlaceId == not noxious["test game"] then
-		noxious["core gui"].Noxious.mainframe:WaitForChild"TopFrame"		
-	end
+	
+	noxious["core gui"].Noxious.mainframe:WaitForChild"TopFrame"		
 
 	local welcome = noxious["top frame"]:WaitForChild("welcome")		
 	local welcome2 = noxious["top frame"]:WaitForChild("welcome2")
 
 	-- If playersFolder and playerModel exist, proceed to replace NameTag text
-	if playersFolder and playerModel then
-		local humanoidRootPart = playerModel:WaitForChild"HumanoidRootPart"			
-		local nameTag = humanoidRootPart:WaitForChild"NameTag"			
+	if playersFolder and playerModel then	
+		local nameTag = noxious["local root"]:WaitForChild"NameTag"			
 		local frame = nameTag:WaitForChild"Frame"
 
 		local displayNameLabel = frame:WaitForChild"DisplayName"			
@@ -7397,7 +6984,6 @@ function enableglitchednametag()
 		savedDisplayName = displayNameLabel.Text
 		savedUserName = userNameLabel.Text
 	end
-
 	scriptEnabled = true
 	while scriptEnabled do
 		local randomText = generateRandomString(16)
@@ -7408,8 +6994,7 @@ function enableglitchednametag()
 
 		-- Update NameTag labels if applicable
 		if playersFolder and playerModel then
-			local humanoidRootPart = playerModel:WaitForChild"HumanoidRootPart"				
-			local nameTag = humanoidRootPart:WaitForChild"NameTag"				
+			local nameTag = noxious["local root"]:WaitForChild"NameTag"				
 			local frame = nameTag:WaitForChild"Frame"
 
 			local displayNameLabel = frame:WaitForChild"DisplayName"				
@@ -7418,8 +7003,7 @@ function enableglitchednametag()
 			displayNameLabel.Text = randomText
 			userNameLabel.Text = "(@" .. randomText .. ")"
 		end
-
-		wait(0)
+		task.wait()
 	end
 end
 
@@ -7427,9 +7011,6 @@ function disableglitchednametag()
 	scriptEnabled = false	
 
 	local playerName = noxious["local player"].Name
-
-	local playersFolder = workspace:FindFirstChild"Players"or workspace:FindFirstChild"InGamePlayers"		
-	local playerModel = playersFolder and playersFolder:FindFirstChild(playerName)
 
 	noxious["core gui"].Noxious.mainframe:WaitForChild"TopFrame"		
 
@@ -7440,9 +7021,8 @@ function disableglitchednametag()
 	welcome2.Text = welcome2txt
 
 	-- Restore NameTag labels if applicable
-	if playersFolder and playerModel then
-		local humanoidRootPart = playerModel:WaitForChild"HumanoidRootPart"			
-		local nameTag = humanoidRootPart:WaitForChild"NameTag"			
+	if playersFolder and playerModel then		
+		local nameTag = noxious["local root"]:WaitForChild"NameTag"			
 		local frame = nameTag:WaitForChild"Frame"
 
 		local displayNameLabel = frame:WaitForChild"DisplayName"			
@@ -7463,38 +7043,24 @@ function enableglitchedrpname()
 	scriptEnabled2 = true
 	while scriptEnabled2 do
 		local randomText = generateRandomString(16)
-
-		-- Invoke the server to change the name
-		local args = {
-			[1] = randomText,
-			[2] = 0
-		}
-
-		local character = noxious["local player"].Character
-		if character and character:FindFirstChild("HumanoidRootPart") and character.HumanoidRootPart:FindFirstChild("NameTag") then
-			local nameTag = character.HumanoidRootPart.NameTag
-			if nameTag:FindFirstChild("ChangeName") then
-				nameTag.ChangeName:InvokeServer(unpack(args))
+		local nametag = noxious["local root"]:FindFirstChild("NameTag")
+		if nametag then
+			local changename = nametag:FindFirstChild("ChangeName")
+			if changename then
+				changename:InvokeServer(randomText, 0)
 			end
 		end
-
-		wait(0)
+		task.wait()
 	end
 end
 
 function disableglitchedrpname()
 	scriptEnabled2 = false
-
-	-- Restore original name using server invocation
-	local character = noxious["local player"].Character
-	if character and character:FindFirstChild("HumanoidRootPart") and character.HumanoidRootPart:FindFirstChild("NameTag") then
-		local nameTag = character.HumanoidRootPart.NameTag
-		if nameTag:FindFirstChild("ChangeName") then
-			local args = {
-				[1] = noxious["local player"].DisplayName, -- Original Display Name
-				[2] = 0
-			}
-			nameTag.ChangeName:InvokeServer(unpack(args))
+	local nametag = noxious["local root"]:FindFirstChild("NameTag")
+	if nametag then
+		local changename = nametag:FindFirstChild("ChangeName")
+		if changename then
+			changename:InvokeServer(noxious["local player"].DisplayName, 0)
 		end
 	end
 end
@@ -7503,9 +7069,8 @@ end
 
 -- Function to change the Coin value
 function changeCoinValue(playerId, value)
-	local playerData = game:GetService"ReplicatedStorage":WaitForChild"PlayerData"		
+	local playerData = noxious["replicated storage"]:WaitForChild"PlayerData"		
 	local playerFolder = playerData:FindFirstChild(tostring(playerId))
-
 	if playerFolder and playerFolder:FindFirstChild"Coin"and playerFolder.Coin:IsA"NumberValue"then
 		playerFolder.Coin.Value = value
 	end
@@ -7514,9 +7079,8 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function fakeblackouts(playerId, value)
-	local playerData = game:GetService"ReplicatedStorage":WaitForChild"PlayerData"		
+	local playerData = noxious["replicated storage"]:WaitForChild"PlayerData"		
 	local playerFolder = playerData:FindFirstChild(tostring(playerId))
-
 	if playerFolder and playerFolder:FindFirstChild"Blackouts"and playerFolder.Coin:IsA"NumberValue"then
 		playerFolder.Blackouts.Value = value
 	end
@@ -7525,9 +7089,8 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function fakedandyitemspurchased(playerId, value)
-	local playerData = game:GetService"ReplicatedStorage":WaitForChild"PlayerData"		
+	local playerData = noxious["replicated storage"]:WaitForChild"PlayerData"		
 	local playerFolder = playerData:FindFirstChild(tostring(playerId))
-
 	if playerFolder and playerFolder:FindFirstChild"DandyItemsPurchased"and playerFolder.Coin:IsA"NumberValue"then
 		playerFolder.DandyItemsPurchased.Value = value
 	end
@@ -7536,9 +7099,8 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function fakefloorstraveled(playerId, value)
-	local playerData = game:GetService"ReplicatedStorage":WaitForChild"PlayerData"		
+	local playerData = noxious["replicated storage"]:WaitForChild"PlayerData"		
 	local playerFolder = playerData:FindFirstChild(tostring(playerId))
-
 	if playerFolder and playerFolder:FindFirstChild"FloorsTraveled"and playerFolder.Coin:IsA"NumberValue"then
 		playerFolder.FloorsTraveled.Value = value
 	end
@@ -7547,9 +7109,8 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function fakemachinescompleted(playerId, value)
-	local playerData = game:GetService"ReplicatedStorage":WaitForChild"PlayerData"		
+	local playerData = noxious["replicated storage"]:WaitForChild"PlayerData"		
 	local playerFolder = playerData:FindFirstChild(tostring(playerId))
-
 	if playerFolder and playerFolder:FindFirstChild"GeneratorsCompleted"and playerFolder.Coin:IsA"NumberValue"then
 		playerFolder.GeneratorsCompleted.Value = value
 	end
@@ -7558,9 +7119,8 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function fakefurthestfloor(playerId, value)
-	local playerData = game:GetService"ReplicatedStorage":WaitForChild"PlayerData"		
+	local playerData = noxious["replicated storage"]:WaitForChild"PlayerData"		
 	local playerFolder = playerData:FindFirstChild(tostring(playerId))
-
 	if playerFolder and playerFolder:FindFirstChild"HighestFloor"and playerFolder.Coin:IsA"NumberValue"then
 		playerFolder.HighestFloor.Value = value
 	end
@@ -7569,9 +7129,8 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function fakeitemspickedup(playerId, value)
-	local playerData = game:GetService"ReplicatedStorage":WaitForChild"PlayerData"		
+	local playerData = noxious["replicated storage"]:WaitForChild"PlayerData"		
 	local playerFolder = playerData:FindFirstChild(tostring(playerId))
-
 	if playerFolder and playerFolder:FindFirstChild"ItemsPickedUp"and playerFolder.Coin:IsA"NumberValue"then
 		playerFolder.ItemsPickedUp.Value = value
 	end
@@ -7580,8 +7139,7 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function unlockalltoons()
-	local player = noxious["local player"].UserId
-	local folder = game.ReplicatedStorage.PlayerData:FindFirstChild(player).Towers
+	local folder = noxious["replicated storage"].PlayerData:FindFirstChild(noxious["local player"].UserId).Towers
 	for _, name in pairs(names) do
 		local toon = Instance.new("StringValue", folder)
 		toon.Name = name
@@ -7592,8 +7150,7 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function unlockalltrinkets()
-	local player = noxious["local player"].UserId
-	local folder = game.ReplicatedStorage.PlayerData:FindFirstChild(player).Trinkets
+	local folder = noxious["replicated storage"].PlayerData:FindFirstChild(noxious["local player"].UserId).Trinkets
 	local names = { "EggRadar", "WhisperingFlower", "GlazedFondantBag", "Scrapbook", "PartyPopper", "FestiveLights", "Coal", "ToyKit", "PeppermintIcing", "BlushyBat", "Alarm", "Cardboard'Armor'", "CoinPurse", "Megaphone", "PopPack", "PullToy", "SpeedyShoes", "Speedometer", "Thermos", "ThinkingCap", "WaterCooler", "Wrench", " Brick", "BlueBandana", "Bone", "CrayonSet", "DandyPlush", "DogPlush", " FriendshipBracelet", "MachineManual", "Magnifying Glass", "NightCap", "PinkBow", " RibbonSpool", "SpareBulb", "VeeRemote", "ClownHorn", "GhostSnakes"}
 	for _, name in pairs(names) do
 		local trinket = Instance.new("StringValue", folder)
@@ -7605,7 +7162,7 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function opendandysshop()
-	local mainGui = noxious["local player"]:WaitForChild"PlayerGui":WaitForChild"MainGui"
+	local mainGui = noxious["player gui"]:WaitForChild"MainGui"
 	local dandyframe = mainGui:WaitForChild"DandyFrame"
 	dandyframe.Visible = true
 end
@@ -7613,7 +7170,7 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function opentoonlicenseshop()
-	local mainGui = noxious["local player"]:WaitForChild"PlayerGui":WaitForChild"MainGui"
+	local mainGui = noxious["player gui"]:WaitForChild"MainGui"
 	local storeFrame = mainGui:WaitForChild"StoreFrame"
 	storeFrame.Visible = true
 end
@@ -7621,7 +7178,7 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function opentrinketshop()
-	local mainGui = noxious["local player"]:WaitForChild"PlayerGui":WaitForChild"MainGui"
+	local mainGui = noxious["player gui"]:WaitForChild"MainGui"
 	local trinketstoreframe = mainGui:WaitForChild"TrinketStoreFrame"
 	trinketstoreframe.Visible = true
 end
@@ -7629,7 +7186,7 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function openskinchanger()	
-	local mainGui = noxious["local player"]:WaitForChild"PlayerGui":WaitForChild"MainGui"
+	local mainGui = noxious["player gui"]:WaitForChild"MainGui"
 	local skinframe = mainGui:WaitForChild"SkinFrame"
 	skinframe.Visible = true
 end
@@ -7637,7 +7194,7 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function openskincollection()
-	local mainGui = noxious["local player"]:WaitForChild"PlayerGui":WaitForChild"MainGui"
+	local mainGui = noxious["player gui"]:WaitForChild"MainGui"
 	local skincollectionframe = mainGui:WaitForChild"SkinCollectionFrame"
 	skincollectionframe.Visible = true
 end
@@ -7645,7 +7202,7 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function openskinstore()
-	local mainGui = noxious["local player"]:WaitForChild"PlayerGui":WaitForChild"MainGui"
+	local mainGui = noxious["player gui"]:WaitForChild"MainGui"
 	local skinstoreframe = mainGui:WaitForChild"SkinStoreFrame"
 	skinstoreframe.Visible = true
 end
@@ -7653,7 +7210,7 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function openmerchstore()
-	local mainGui = noxious["local player"]:WaitForChild"PlayerGui":WaitForChild"MainGui"
+	local mainGui = noxious["player gui"]:WaitForChild"MainGui"
 	local merchframe = mainGui:WaitForChild"MerchFrame"
 	merchframe.Visible = true
 end
@@ -7662,7 +7219,7 @@ end
 
 -- anti skillcheck
 function antiskillcheck()
-	local skillCheckFrame = player.PlayerGui.ScreenGui.Menu:FindFirstChild"SkillCheckFrame"
+	local skillCheckFrame = noxious["player gui"].ScreenGui.Menu:FindFirstChild"SkillCheckFrame"
 	if skillCheckFrame then
 		skillCheckFrame:Destroy()
 	end
@@ -7674,13 +7231,12 @@ local updateEnabled, updateEnabled2 = true, true
 local updateLoop, updateLoop2
 
 function looprunspeed()
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local sprinting = character.Stats.Sprinting
+	local sprinting = noxious["local character"].Stats.Sprinting
 	if not updateLoop then
 		updateLoop = coroutine.create(function()
 			while updateEnabled do
-				character:WaitForChild"Humanoid".WalkSpeed = noxious["local player"]:GetAttribute("KM_MAX_PLAYER_SPEED")
-				sprinting.Value = true
+				noxious["local humanoid"].WalkSpeed = noxious["local player"]:GetAttribute("KM_MAX_PLAYER_SPEED")
+				sprinting.Value = updateEnabled
 				task.wait()
 			end
 		end)
@@ -7689,13 +7245,12 @@ function looprunspeed()
 end
 
 function loopmaxspeed()
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local sprinting = character.Stats.Sprinting
+	local sprinting = noxious["local character"].Stats.Sprinting
 	if not updateLoop2 then
 		updateLoop2 = coroutine.create(function()
 			while updateEnabled2 do
-				character:WaitForChild"Humanoid".WalkSpeed = noxious["local player"]:GetAttribute("KM_MAX_PLAYER_SPEED") * 1.25
-				sprinting.Value = true
+				noxious["local humanoid"].WalkSpeed = noxious["local player"]:GetAttribute("KM_MAX_PLAYER_SPEED") * 1.25
+				sprinting.Value = updateEnabled
 				task.wait()
 			end
 		end)
@@ -7806,36 +7361,29 @@ local flightConnection
 
 -- Function to start flying
 function startFlying(flySpeed)
-	local player = noxious["local player"]
-	local character = player.Character or player.CharacterAdded:Wait()
-	local humanoid = character:WaitForChild"Humanoid"		
-	local humanoidRootPart = character:WaitForChild"HumanoidRootPart"		
-
 	if flying then return end -- Prevent multiple starts
 	flying = true
 	humanoidRootPart.Anchored = false
 	speed = flySpeed or 20 -- Set the speed to the provided value or default to 20
-
-	-- Start flight loop
 	flightConnection = noxious["run service"].RenderStepped:Connect(function()
 		if flying then
 			local moveDirection = humanoid.MoveDirection
 			if moveDirection.Magnitude > 0 then
 				local cameraDirection = noxious["current camera"].CFrame.LookVector
 
-				if humanoidRootPart.Anchored then
-					humanoidRootPart.Anchored = false
+				if noxious["local root"].Anchored then
+					noxious["local root"].Anchored = false
 				end
 
 				-- Combine movement with camera Y direction for flight control
 				local combinedDirection = (moveDirection * Vector3.new(1, 0, 1)) + Vector3.new(0, cameraDirection.Y, 0)
 				combinedDirection = combinedDirection.Unit
 				local lookAt = humanoidRootPart.Position + Vector3.new(cameraDirection.X, 0, cameraDirection.Z)
-				humanoidRootPart.CFrame = CFrame.new(humanoidRootPart.Position, lookAt)
-				humanoidRootPart.Velocity = combinedDirection * speed
+				noxious["local root"].CFrame = CFrame.new(humanoidRootPart.Position, lookAt)
+				noxious["local root"].Velocity = combinedDirection * speed
 			else
-				humanoidRootPart.Anchored = true -- Hover in place if no movement
-				humanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+				noxious["local root"].Anchored = true -- Hover in place if no movement
+				noxious["local root"].Velocity = Vector3.zero
 			end
 		end
 	end)
@@ -7844,16 +7392,9 @@ end
 -- Function to stop flying
 function stopFlying()
 	if not flying then return end -- Prevent stopping if already stopped
-
-	local player = noxious["local player"]
-	local character = player.Character or player.CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild"HumanoidRootPart"
-
 	flying = false
-	humanoidRootPart.Anchored = false
-	humanoidRootPart.Velocity = Vector3.new(0, 0, 0)
-
-	-- Disconnect flight loop
+	noxious["local root"].Anchored = false
+	noxious["local root"].Velocity = Vector3.zero
 	if flightConnection then
 		flightConnection:Disconnect()
 		flightConnection = nil
@@ -7864,10 +7405,6 @@ end
 
 -- Function to teleport the player behind another player (or themselves)
 function teleportBehindPlayer(targetName)
-	local player = noxious["local player"]
-	local character = player.Character or player.CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild"HumanoidRootPart"
-
 	local targetPlayer
 	if targetName:lower() == "random" then
 		local players = noxious["players"]:GetPlayers()
@@ -7881,11 +7418,7 @@ function teleportBehindPlayer(targetName)
 	if targetPlayer then
 		local targetCharacter = targetPlayer.Character
 		if targetCharacter and targetCharacter:FindFirstChild"HumanoidRootPart"then
-			local targetRootPart = targetCharacter.HumanoidRootPart
-
-			-- Calculate the position 3 studs behind the target
-			local behindPosition = targetRootPart.CFrame * CFrame.new(0, 0, 3)
-			humanoidRootPart.CFrame = behindPosition
+			teleportplr(targetCharacter.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3))
 		end
 	end
 end
@@ -7893,8 +7426,6 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function checkIfShelly()
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	character:WaitForChild"Head"		
 	local playerModel = workspace:FindFirstChild"Players"or workspace:FindFirstChild"InGamePlayers"
 	-- Check for ToonName
 
@@ -7926,12 +7457,7 @@ local loopConnection
 
 -- Function to invoke the ability event
 function invokeAbilityEvent()
-	local args = {
-		[1] = game:GetService"Players".LocalPlayer.Character,
-		[2] = CFrame.new(-65.78115844726563, 145.7693634033203, 86.53424072265625) * CFrame.Angles(4.413669e-9, 2.9576959e-16, 5.3380848e-8),
-		[3] = false
-	}
-	game:GetService"ReplicatedStorage".Events.AbilityEvent:InvokeServer(unpack(args))
+	noxious["replicated storage"].Events.AbilityEvent:InvokeServer(noxious["local character"], noxious["local character"]:GetPivot(), false)
 end
 
 -- Function to start the loop
@@ -7939,7 +7465,7 @@ function enableautouseactiveability()
 	if running then
 		loopConnection = noxious["run service"].Heartbeat:Connect(function()
 			invokeAbilityEvent()  -- Call the ability event
-			wait(0)  -- Wait 0.3 seconds before invoking again
+			task.wait()  -- Wait 0.3 seconds before invoking again
 		end)
 	end
 end
@@ -7959,64 +7485,37 @@ function gatherresearch()
 	spawn(function()
 		enableItemAura()
 	end)
-
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild"HumanoidRootPart"		
-	local originalPosition = humanoidRootPart.CFrame
-
-	local currentRoom = workspace:FindFirstChild"CurrentRoom"		
-	if currentRoom then
-		-- Set gravity to 0 for the duration of the loop
-		workspace.Gravity = 0
-
-		local visitedRazzleDazzle = false -- Flag to track RazzleDazzleMonster
-
-		for _, model in ipairs(currentRoom:GetChildren()) do
-			if model:IsA"Model"then
-				local monstersFolder = model:FindFirstChild"Monsters"					
-				if monstersFolder then
-					for _, monster in ipairs(monstersFolder:GetChildren()) do
-						if monster:IsA"Model"then
-							-- Determine Y offset based on monster name
-							local yOffset = 12 -- Default offset
-							if monster.Name == "RodgerMonster" then
-								yOffset = 5 -- Custom offset for RodgerMonster
-							elseif monster.Name == "RazzleDazzleMonster" and not visitedRazzleDazzle then
-								-- Handle RazzleDazzleMonster specifically
-								visitedRazzleDazzle = true -- Mark as visited
-								yOffset = 0
-								humanoidRootPart.CFrame = monster:GetModelCFrame() + Vector3.new(0, yOffset, 0)
-								workspace.Gravity = 196.2
-								local VirtualInputManager = game:GetService"VirtualInputManager"									
-								VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.W, false, game)
-								wait(0.5) -- Wait for a brief moment
-								VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.W, false, game)
-								workspace.Gravity = 0
-							end
-
-							-- Teleport to each monster's position with the determined offset
-							if monster.Name ~= "RazzleDazzleMonster" or not visitedRazzleDazzle then
-								humanoidRootPart.CFrame = monster:GetModelCFrame() + Vector3.new(0, yOffset, 0)
-								task.wait(0.5)
-							end
-						end
+	local originalPosition = noxious["local root"].CFrame
+	workspace.Gravity = 0
+	local visitedRazzleDazzle = false -- Flag to track RazzleDazzleMonster
+	if getMap() then 
+		local monstersFolder = getMap():FindFirstChild"Monsters"					
+		if monstersFolder then
+			for _, monster in ipairs(monstersFolder:GetChildren()) do
+				if monster:IsA"Model"then
+					local yOffset = 3 -- Default offset
+					if monster.Name == "RazzleDazzleMonster" and not visitedRazzleDazzle then
+						visitedRazzleDazzle = true -- Mark as visited
+						yOffset = 0
+						teleportplr(monster:GetModelCFrame() + Vector3.new(0, yOffset, 0))
+						workspace.Gravity = 196.2									
+						noxious["virtual input manager"]:SendKeyEvent(true, Enum.KeyCode.W, false, game)
+						wait(0.5)
+						noxious["virtual input manager"]:SendKeyEvent(false, Enum.KeyCode.W, false, game)
+						workspace.Gravity = 0
+					end
+					if monster.Name ~= "RazzleDazzleMonster" or not visitedRazzleDazzle then
+						teleportplr(monster:GetModelCFrame() + Vector3.new(5, yOffset, 5))
+						task.wait(0.5)
 					end
 				end
 			end
 		end
-
-		-- Return to the original position
-		humanoidRootPart.CFrame = originalPosition
-
-		-- Wait briefly before restoring gravity
-		task.wait(0.2)
-
-		-- Restore original gravity
-		workspace.Gravity = 196.2
-
-		originalPosition = nil
 	end
-
+	teleportplr(originalPosition)
+	task.wait(0.2)
+	workspace.Gravity = 196.2
+	originalPosition = nil
 	spawn(function()
 		disableItemAura()
 	end)
@@ -8026,17 +7525,10 @@ end
 
 local isautouseitemslooprunning = true 
 
-function invokeItemEvent(slot)
-	local ReplicatedStorage = game:GetService"ReplicatedStorage"		
-	local Character = noxious["local player"].Character
-	local Inventory = Character.Inventory
-	local args = {
-		[1] = Character,
-		[2] = Inventory:FindFirstChild(slot)
-	}
-
-	if args[2] then
-		ReplicatedStorage.Events.ItemEvent:InvokeServer(unpack(args))
+function invokeItemEvent(slot)	
+	local slot = noxious["local character"].Inventory:FindFirstChild(slot)
+	if slot then
+		noxious["replicated storage"].Events.ItemEvent:InvokeServer(noxious["local character"], slot)
 	end
 end
 
@@ -8054,8 +7546,12 @@ function startautouseitemsloop()
 		spawn(function()
 			invokeItemEvent"Slot3"			
 		end)
+		
+		spawn(function()
+			invokeItemEvent"Slot4"			
+		end)
 
-		wait(0)
+		task.wait()
 	end
 end
 
@@ -8088,26 +7584,17 @@ end
 
 function checkForProximityPrompts()
 	if iatogglestate then
-		local character = noxious["local player"].Character
-		if character then
-			local humanoidRootPart = character:FindFirstChild"HumanoidRootPart"				
-			if humanoidRootPart then
-				local currentRoomFolder = workspace:FindFirstChild"CurrentRoom"					
-				if currentRoomFolder then
-					for _, model in pairs(currentRoomFolder:GetChildren()) do
-						local itemsFolder = model:FindFirstChild"Items"							
-						if itemsFolder then
-							for _, item in pairs(itemsFolder:GetChildren()) do
-								local promptPart = item:FindFirstChild"Prompt"									
-								if promptPart then
-									local proximityPrompt = promptPart:FindFirstChild"ProximityPrompt"										
-									if proximityPrompt and proximityPrompt.Enabled then
-										local distance = (promptPart.Position - humanoidRootPart.Position).Magnitude
-										if distance <= pprange then
-											interactWithPrompt(proximityPrompt)
-										end
-									end
-								end
+		if getMap() and noxious["local root"] then
+			local itemsFolder = getMap():FindFirstChild"Items"							
+			if itemsFolder then
+				for _, item in pairs(itemsFolder:GetChildren()) do
+					local promptPart = item:FindFirstChild"Prompt"									
+					if promptPart then
+						local proximityPrompt = promptPart:FindFirstChild"ProximityPrompt"										
+						if proximityPrompt and proximityPrompt.Enabled then
+							local distance = (promptPart.Position - noxious["local root"].Position).Magnitude
+							if distance <= pprange then
+								interactWithPrompt(proximityPrompt)
 							end
 						end
 					end
@@ -8139,26 +7626,17 @@ local gatogglestate = false
 
 function checkForgeneratorProximityPrompts()
 	if iatogglestate then
-		local character = noxious["local player"].Character
-		if character then
-			local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-			if humanoidRootPart then
-				local currentRoomFolder = workspace:FindFirstChild("CurrentRoom")
-				if currentRoomFolder then
-					for _, model in pairs(currentRoomFolder:GetChildren()) do
-						local itemsFolder = model:FindFirstChild("Generators")
-						if itemsFolder then
-							for _, item in pairs(itemsFolder:GetChildren()) do
-								for _, descendant in pairs(item:GetDescendants()) do
-									if descendant:IsA("ProximityPrompt") and descendant.Enabled then
-										local promptPart = descendant.Parent
-										if promptPart and promptPart:IsA("BasePart") then
-											local distance = (promptPart.Position - humanoidRootPart.Position).Magnitude
-											if distance <= pprange then
-												interactWithPrompt(descendant)
-											end
-										end
-									end
+		if getMap() and noxious["local root"] then
+			local itemsFolder = getMap():FindFirstChild("Generators")
+			if itemsFolder then
+				for _, item in pairs(itemsFolder:GetChildren()) do
+					for _, descendant in pairs(item:GetDescendants()) do
+						if descendant:IsA("ProximityPrompt") and descendant.Enabled then
+							local promptPart = descendant.Parent
+							if promptPart and promptPart:IsA("BasePart") then
+								local distance = (promptPart.Position - noxious["local root"].Position).Magnitude
+								if distance <= pprange then
+									interactWithPrompt(descendant)
 								end
 							end
 						end
@@ -8195,33 +7673,20 @@ function pickupallitems()
 	spawn(function() bringplayerdown() end)
 	wait(0.2)
 
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-	local originalPosition = humanoidRootPart.CFrame
-
-	local currentRoom = workspace:FindFirstChild("CurrentRoom")
-	if currentRoom then
-		for _, model in ipairs(currentRoom:GetChildren()) do
-			if model:IsA("Model") then
-				local itemsFolder = model:FindFirstChild("Items")
-				if itemsFolder and #itemsFolder:GetChildren() > 0 then
-					for _, item in ipairs(itemsFolder:GetChildren()) do
-						if item:IsA("Model") then
-							-- Add a -3.3 stud offset on the Y-axis
-							local itemCFrame = item:GetModelCFrame() * CFrame.new(0, -3.3, 0)
-
-							-- Tween the player to the item's position
-							tweenplr(itemCFrame, 30) -- Adjust duration as needed
-
-						end
-					end
+	local originalPosition = noxious["local root"].CFrame
+	if getMap() then
+		local itemsFolder = getMap():FindFirstChild("Items")
+		if itemsFolder and #itemsFolder:GetChildren() > 0 then
+			for _, item in ipairs(itemsFolder:GetChildren()) do
+				if item:IsA("Model") then
+					local itemCFrame = item:GetModelCFrame() * CFrame.new(0, -3.3, 0)
+					tweenplr(itemCFrame)
 				end
 			end
 		end
 	end
 
-	-- Tween back to the original position
-	tweenplr(originalPosition, 30) -- Adjust duration as needed
+	tweenplr(originalPosition)
 
 	task.wait(0.1)
 
@@ -8240,23 +7705,20 @@ function pickupallresearchcapsules()
 	spawn(function() enableItemAura() end)
 	spawn(function() bringplayerdown() end)
 	wait(0.2)
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-
-	local humanoidRootPart = character:WaitForChild"HumanoidRootPart"		
-	local originalPosition = humanoidRootPart.CFrame
+	local originalPosition = noxious["local root"].CFrame
 
 	local currentRoom = workspace:FindFirstChild"CurrentRoom"		
 	if currentRoom then
-		for _, model in ipairs(currentRoom:GetChildren()) do
+		for _)) do
 			if model:IsA"Model"then
-				local itemsFolder = model:FindFirstChild"Items"					
+				local itemsFolder = getMap():FindFirstChild"Items"					
 				if itemsFolder and #itemsFolder:GetChildren() > 0 then
 					for _, item in ipairs(itemsFolder:GetChildren()) do
 						-- Only pick up items named "ResearchCapsule"
 						if item:IsA"Model"and item.Name == "ResearchCapsule" then
 							local itemCFrame = item:GetModelCFrame() * CFrame.new(0, -3.3, 0)
 
-							tweenplr(itemCFrame, 30)
+							tweenplr(itemCFrame)
 
 						end
 					end
@@ -8265,7 +7727,7 @@ function pickupallresearchcapsules()
 		end
 	end
 
-	tweenplr(originalPosition, 30)
+	tweenplr(originalPosition)
 
 	task.wait(0.1)
 
@@ -8284,32 +7746,21 @@ function pickupalltapes()
 	spawn(function() enableItemAura() end)
 	spawn(function() bringplayerdown() end)
 	wait(0.2)
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
+	local originalPosition = noxious["local root"].CFrame
 
-	local humanoidRootPart = character:WaitForChild"HumanoidRootPart"		
-	local originalPosition = humanoidRootPart.CFrame
-
-	local currentRoom = workspace:FindFirstChild"CurrentRoom"		
-	if currentRoom then
-		for _, model in ipairs(currentRoom:GetChildren()) do
-			if model:IsA"Model"then
-				local itemsFolder = model:FindFirstChild"Items"					
-				if itemsFolder and #itemsFolder:GetChildren() > 0 then
-					for _, item in ipairs(itemsFolder:GetChildren()) do
-						-- Only pick up items named "ResearchCapsule"
-						if item:IsA"Model"and item.Name == "Tape" then
-							local itemCFrame = item:GetModelCFrame() * CFrame.new(0, -3.3, 0)
-
-							tweenplr(itemCFrame, 30)
-
-						end
-					end
+	if getMap() then
+		local itemsFolder = getMap():FindFirstChild"Items"					
+		if itemsFolder and #itemsFolder:GetChildren() > 0 then
+			for _, item in ipairs(itemsFolder:GetChildren()) do
+				if item:IsA"Model"and item.Name == "Tape" then
+					local itemCFrame = item:GetModelCFrame() * CFrame.new(0, -3.3, 0)
+					tweenplr(itemCFrame)
 				end
 			end
 		end
 	end
 
-	tweenplr(originalPosition, 30)
+	tweenplr(originalPosition)
 
 	task.wait(0.1)
 
@@ -8328,23 +7779,17 @@ function pickupallheals()
 	spawn(function() enableItemAura() end)
 	spawn(function() bringplayerdown() end)
 	wait(0.2)
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
+	local originalPosition = noxious["local root"].CFrame
 
-	local humanoidRootPart = character:WaitForChild"HumanoidRootPart"		
-	local originalPosition = humanoidRootPart.CFrame
-
-	local currentRoom = workspace:FindFirstChild"CurrentRoom"		
-	if currentRoom then
-		for _, model in ipairs(currentRoom:GetChildren()) do
-			if model:IsA"Model"then
-				local itemsFolder = model:FindFirstChild"Items"					
-				if itemsFolder and #itemsFolder:GetChildren() > 0 then
+	if getMap() then
+		local itemsFolder = getMap():FindFirstChild"Items"					
+		if itemsFolder and #itemsFolder:GetChildren() > 0 then
 					for _, item in ipairs(itemsFolder:GetChildren()) do
 						-- Only pick up items named "ResearchCapsule"
 						if item:IsA"Model"and item.Name == "Bandage" or item.Name == "HealthKit" then
 							local itemCFrame = item:GetModelCFrame() * CFrame.new(0, -3.3, 0)
 
-							tweenplr(itemCFrame, 30)
+							tweenplr(itemCFrame)
 
 						end
 					end
@@ -8353,7 +7798,7 @@ function pickupallheals()
 		end
 	end
 
-	tweenplr(originalPosition, 30)
+	tweenplr(originalPosition)
 
 	task.wait(0.1)
 
@@ -8371,33 +7816,23 @@ function pickupallextractionitems()
 	spawn(function() enableNoclip() end)
 	spawn(function() enableItemAura() end)
 	spawn(function() bringplayerdown() end)
-	wait(0.2)
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
+	wait(0.2)	
+	local originalPosition = noxious["local root"].CFrame
 
-	local humanoidRootPart = character:WaitForChild"HumanoidRootPart"		
-	local originalPosition = humanoidRootPart.CFrame
-
-	local currentRoom = workspace:FindFirstChild"CurrentRoom"		
-	if currentRoom then
-		for _, model in ipairs(currentRoom:GetChildren()) do
-			if model:IsA"Model"then
-				local itemsFolder = model:FindFirstChild"Items"					
-				if itemsFolder and #itemsFolder:GetChildren() > 0 then
-					for _, item in ipairs(itemsFolder:GetChildren()) do
-						-- Only pick up items named "ResearchCapsule"
-						if item:IsA"Model"and item.Name == "JumperCable" or item.Name == "Valve" then
-							local itemCFrame = item:GetModelCFrame() * CFrame.new(0, -3.3, 0)
-
-							tweenplr(itemCFrame, 30)
-
-						end
-					end
+	if getMap() then
+		local itemsFolder = getMap():FindFirstChild"Items"					
+		if itemsFolder and #itemsFolder:GetChildren() > 0 then
+			for _, item in ipairs(itemsFolder:GetChildren()) do
+				-- Only pick up items named "ResearchCapsule"
+				if item:IsA"Model"and item.Name == "JumperCable" or item.Name == "Valve" then
+					local itemCFrame = item:GetModelCFrame() * CFrame.new(0, -3.3, 0)
+					tweenplr(itemCFrame)
 				end
 			end
 		end
 	end
 
-	tweenplr(originalPosition, 30)
+	tweenplr(originalPosition)
 
 	task.wait(0.1)
 
@@ -8416,32 +7851,21 @@ function pickupallbaskets()
 	spawn(function() enableItemAura() end)
 	spawn(function() bringplayerdown() end)
 	wait(0.2)
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
+	local originalPosition = noxious["local root"].CFrame
 
-	local humanoidRootPart = character:WaitForChild"HumanoidRootPart"		
-	local originalPosition = humanoidRootPart.CFrame
-
-	local currentRoom = workspace:FindFirstChild"CurrentRoom"		
-	if currentRoom then
-		for _, model in ipairs(currentRoom:GetChildren()) do
-			if model:IsA"Model"then
-				local itemsFolder = model:FindFirstChild"Items"					
-				if itemsFolder and #itemsFolder:GetChildren() > 0 then
-					for _, item in ipairs(itemsFolder:GetChildren()) do
-						-- Only pick up items named "ResearchCapsule"
-						if item:IsA"Model" and item.Name == "HolidayCollectibleItem" or item.Name == "Holiday Collectible Item" then
-							local itemCFrame = item:GetModelCFrame() * CFrame.new(0, -3.3, 0)
-
-							tweenplr(itemCFrame, 30)
-
-						end
-					end
+	if getMap() then
+		local itemsFolder = getMap():FindFirstChild"Items"					
+		if itemsFolder and #itemsFolder:GetChildren() > 0 then
+			for _, item in ipairs(itemsFolder:GetChildren()) do
+				if item:IsA"Model" and item.Name:match("Holiday") then
+					local itemCFrame = item:GetModelCFrame() * CFrame.new(0, -3.3, 0)
+					tweenplr(itemCFrame)
 				end
 			end
 		end
 	end
 
-	tweenplr(originalPosition, 30)
+	tweenplr(originalPosition)
 
 	task.wait(0.1)
 
@@ -8457,11 +7881,8 @@ end
 local istposeloopenabled = false
 local tposeloopconnection
 
-function pauseAnimations()
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local humanoid = character:WaitForChild"Humanoid"		
-	local animator = humanoid:WaitForChild"Animator"		
-	for _, track in pairs(animator:GetPlayingAnimationTracks()) do
+function pauseAnimations()	
+	for _, track in pairs(noxious["local humanoid"].Animator:GetPlayingAnimationTracks()) do
 		track:Stop()
 	end
 end
@@ -8478,13 +7899,10 @@ function tpose()
 end
 
 function untpose()
-	local Char = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local Human = Char and Char:WaitForChild("Humanoid", 15)
-	local Animate = Char and Char:WaitForChild("Animate", 15)
-
+	local Animate = noxious["local character"]:WaitForChild("Animate", 15)
 	if Animate then
 		Animate.Disabled = true
-		for _, v in ipairs(Human:GetPlayingAnimationTracks()) do
+		for _, v in ipairs(noxious["local humanoid"].Animator:GetPlayingAnimationTracks()) do
 			v:Stop()
 		end
 		Animate.Disabled = false
@@ -8574,18 +7992,14 @@ function createRainbowLoop(character)
 				end
 			end
 
-			wait(0)
+			task.wait()
 		end
 	end)
 	coroutine.resume(rainbowLoopCoroutine)
 end
 
 function rainbowghostcharacter()
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-
-	-- Store original properties before any modifications
-	storeOriginalProperties(character)
-
+	storeOriginalProperties(noxious["local character"])
 	local function removeTexturesAndChangeAppearance(character)
 		for _, part in pairs(character:GetDescendants()) do
 			if part:IsA"BasePart"then
@@ -8609,12 +8023,8 @@ function rainbowghostcharacter()
 			end
 		end
 	end
-
-	-- Remove textures and change appearance to ghost
-	removeTexturesAndChangeAppearance(character)
-
-	-- Start the rainbow loop
-	createRainbowLoop(character)
+	removeTexturesAndChangeAppearance(noxious["local character"])
+	createRainbowLoop(noxious["local character"])
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
@@ -8637,9 +8047,7 @@ local colorMap = {
 
 -- Function to change the character's appearance to a ghost with the specified color
 function ghostCharacter(color)
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-
-	storeOriginalProperties(character)
+	storeOriginalProperties(noxious["local character"])
 
 	local function removeTexturesAndChangeAppearance(character)
 		for _, part in pairs(character:GetDescendants()) do
@@ -8667,7 +8075,7 @@ function ghostCharacter(color)
 		end
 	end
 
-	removeTexturesAndChangeAppearance(character)
+	removeTexturesAndChangeAppearance(noxious["local character"])
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
@@ -8687,42 +8095,35 @@ function dwtptg()
 	spawn(function() bringplayerdown() end)
 	wait(0.2)
 
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-
-	local currentRoom = workspace:FindFirstChild("CurrentRoom")
-	if currentRoom then
-		for _, item in pairs(currentRoom:GetChildren()) do
-			if item:IsA("Model") then
-				local generatorsFolder = item:FindFirstChild("Generators")
-				if generatorsFolder then
-					local generators = {}
-					for _, generator in pairs(generatorsFolder:GetChildren()) do
-						if generator:IsA("Model") and generator.PrimaryPart then
-							local statsFolder = generator:FindFirstChild("Stats")
-							if statsFolder then
-								local completedValue = statsFolder:FindFirstChild("Completed")
-								if completedValue and completedValue:IsA("BoolValue") and not completedValue.Value then
-									if not isConnieActive(generator) then
-										table.insert(generators, generator)
-									end
-								end
+	if getMap() then
+		local generatorsFolder = getMap():FindFirstChild("Generators")
+		if generatorsFolder then
+			local generators = {}
+			for _, generator in pairs(generatorsFolder:GetChildren()) do
+				if generator:IsA("Model") and generator.PrimaryPart then
+					local statsFolder = generator:FindFirstChild("Stats")
+					if statsFolder then
+						local completedValue = statsFolder:FindFirstChild("Completed")
+						if completedValue and completedValue:IsA("BoolValue") and not completedValue.Value then
+							if not isConnieActive(generator) then
+								table.insert(generators, generator)
 							end
 						end
 					end
-
-					if #generators > 0 then
-						local randomGenerator = generators[math.random(1, #generators)]
-						local generatorCFrame = randomGenerator:GetPrimaryPartCFrame()
-						local forwardPosition = generatorCFrame.Position + generatorCFrame.LookVector * 4
-						local targetCFrame = CFrame.new(forwardPosition, generatorCFrame.Position) * CFrame.new(0, -3.3, 0)
-
-						-- Tween the player to the target position
-						tweenplr(targetCFrame, 30) -- Adjust duration as needed
-						wait(0.2)
-						spawn(function() bringplayerup() end)
-						spawn(function() disableNoclip() end)
-					end
 				end
+			end
+
+			if #generators > 0 then
+				local randomGenerator = generators[math.random(1, #generators)]
+				local generatorCFrame = randomGenerator:GetPrimaryPartCFrame()
+				local forwardPosition = generatorCFrame.Position + generatorCFrame.LookVector * 4
+				local targetCFrame = CFrame.new(forwardPosition, generatorCFrame.Position) * CFrame.new(0, -3.3, 0)
+
+				-- Tween the player to the target position
+				tweenplr(targetCFrame) -- Adjust duration as needed
+				wait(0.2)
+				spawn(function() bringplayerup() end)
+				spawn(function() disableNoclip() end)
 			end
 		end
 	end
@@ -8732,59 +8133,48 @@ end
 
 -- Example usage to reset the character
 function resetCharacterAppearance()
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-
-	-- Stop the rainbow loop and reset the character appearance
 	stopRainbowLoop()
 	if not stopRainbowLoop() then
-		resetCharacter(character)
+		resetCharacter(noxious["local character"])
 	end
 
 	spawn(function()
-		noxious["local player"].Character.ArmL.Transparency = 0
-		noxious["local player"].Character.ArmL2.Transparency = 0
-		noxious["local player"].Character.ArmR.Transparency = 0
-		noxious["local player"].Character.ArmR2.Transparency = 0
-		noxious["local player"].Character.Hair.Transparency = 0
-		noxious["local player"].Character.HandL.Transparency = 0
-		noxious["local player"].Character.HandR.Transparency = 0
-		noxious["local player"].Character.Head.Transparency = 0
-		noxious["local player"].Character.LegL.Transparency = 0
-		noxious["local player"].Character.LegL2.Transparency = 0
-		noxious["local player"].Character.LegR.Transparency = 0
-		noxious["local player"].Character.LegR2.Transparency = 0
+		noxious["local character"].ArmL.Transparency = 0
+		noxious["local character"].ArmL2.Transparency = 0
+		noxious["local character"].ArmR.Transparency = 0
+		noxious["local character"].ArmR2.Transparency = 0
+		noxious["local character"].Hair.Transparency = 0
+		noxious["local character"].HandL.Transparency = 0
+		noxious["local character"].HandR.Transparency = 0
+		noxious["local character"].Head.Transparency = 0
+		noxious["local character"].LegL.Transparency = 0
+		noxious["local character"].LegL2.Transparency = 0
+		noxious["local character"].LegR.Transparency = 0
+		noxious["local character"].LegR2.Transparency = 0
 	end)
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
 function spawnshrimpo()
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild"HumanoidRootPart"
-
 	local meshPart = Instance.new"MeshPart"		
-	meshPart.Size = Vector3.new(1, 1, 1)
+	meshPart.Size = Vector3.one
 	meshPart.Anchored = false
 	meshPart.CanCollide = true
-	meshPart.Position = humanoidRootPart.Position + Vector3.new(0, 5, 0)
+	meshPart.Position = noxious["local root"].Position + Vector3.new(0, 5, 0)
 	meshPart.MeshId = "rbxassetid://78124401415554"
 	meshPart.TextureID = "rbxassetid://88850093113717"
-
 	meshPart.Parent = workspace
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
 function spawndandy()
-	local player = noxious["local player"]
-	local character = player.Character or player.CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild"HumanoidRootPart"
-
 	local meshPart = Instance.new"MeshPart"		
-	meshPart.Size = Vector3.new(1, 1, 1)
+	meshPart.Size = Vector3.one
 	meshPart.Anchored = false
 	meshPart.CanCollide = true
-	meshPart.Position = humanoidRootPart.Position + Vector3.new(0, 5, 0)
+	meshPart.Position = noxious["local root"].Position + Vector3.new(0, 5, 0)
 	meshPart.MeshId = "rbxassetid://107019721797906"
 	meshPart.TextureID = "rbxassetid://109038384710517"
 
@@ -8794,52 +8184,38 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function spawnveeshead()
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild"HumanoidRootPart"
-
 	local meshPart = Instance.new"MeshPart"		
-	meshPart.Size = Vector3.new(1, 1, 1)
+	meshPart.Size = Vector3.one
 	meshPart.Anchored = false
 	meshPart.CanCollide = true
-	meshPart.Position = humanoidRootPart.Position + Vector3.new(0, 5, 0)
+	meshPart.Position = noxious["local root"].Position + Vector3.new(0, 5, 0)
 	meshPart.MeshId = "rbxassetid://105769252421064"
 	meshPart.TextureID = "rbxassetid://132807616662124"
-
 	meshPart.Parent = workspace
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
 function spawntwisteddandy()
-	local player = noxious["local player"]
-	local character = player.Character or player.CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild"HumanoidRootPart"
-
 	local meshPart = Instance.new"MeshPart"		
-	meshPart.Size = Vector3.new(1, 1, 1)
+	meshPart.Size = Vector3.one
 	meshPart.Anchored = false
 	meshPart.CanCollide = true
-	meshPart.Position = humanoidRootPart.Position + Vector3.new(0, 5, 0)
+	meshPart.Position = noxious["local root"].Position + Vector3.new(0, 5, 0)
 	meshPart.MeshId = "rbxassetid://131467007179018"
 	meshPart.TextureID = "rbxassetid://104745646981650"
-
 	meshPart.Parent = workspace
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
 function spawnfishbowl()
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild"HumanoidRootPart"
-
-	local meshPart = Instance.new"MeshPart"		
-	meshPart.Size = Vector3.new(1, 1, 1)
+	meshPart.Size = Vector3.one
 	meshPart.Anchored = false
 	meshPart.CanCollide = true
-	meshPart.Position = humanoidRootPart.Position + Vector3.new(0, 5, 0)
+	meshPart.Position = noxious["local root"].Position + Vector3.new(0, 5, 0)
 	meshPart.MeshId = "rbxassetid://86862554628040"
 	meshPart.TextureID = "rbxassetid://86891402494139"
-
 	meshPart.Parent = workspace
 end
 
@@ -8858,35 +8234,23 @@ end
 
 -- Function to handle spinning
 function startSpinning(speed)
-	local character = noxious["local player"].Character
-	if character then
-		-- Remove any previous spinning effect (destroy BodyAngularVelocity)
-		for _, v in pairs(character:WaitForChild"HumanoidRootPart":GetChildren()) do
-			if v.Name == "Spinning" then
-				v:Destroy()
-			end
+	for _, v in pairs(noxious["local root"]:GetChildren()) do
+		if v.Name == "Spinning" then
+			v:Destroy()
 		end
-
-		-- Create and apply BodyAngularVelocity for spinning
-		local spin = Instance.new"BodyAngularVelocity"			
-		spin.Name = "Spinning"
-		spin.Parent = character:WaitForChild"HumanoidRootPart"			
-		spin.MaxTorque = Vector3.new(0, math.huge, 0)  -- Allow rotation only on Y-axis
-		spin.AngularVelocity = Vector3.new(0, speed, 0) -- Spin around the Y-axis
-
-
 	end
+	local spin = Instance.new"BodyAngularVelocity"			
+	spin.Name = "Spinning"
+	spin.Parent = noxious["local root"]			
+	spin.MaxTorque = Vector3.new(0, math.huge, 0)  -- Allow rotation only on Y-axis
+	spin.AngularVelocity = Vector3.new(0, speed, 0) -- Spin around the Y-axis
 end
 
 -- Function to stop spinning
 function stopSpinning()
-	local character = noxious["local player"].Character
-	if character then
-		-- Remove the spinning effect (BodyAngularVelocity)
-		for _, v in pairs(character:WaitForChild"HumanoidRootPart":GetChildren()) do
-			if v.Name == "Spinning" then
-				v:Destroy()
-			end
+	for _, v in pairs(noxious["local root"]:GetChildren()) do
+		if v.Name == "Spinning" then
+			v:Destroy()
 		end
 	end
 end
@@ -8920,7 +8284,7 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function showalltooncards()
-	local scrollingFrame = noxious["local player"]:WaitForChild"PlayerGui"			
+	local scrollingFrame = noxious["player gui"]			
 		:WaitForChild"ScreenGui"			
 		:WaitForChild"SelectionFrame"			
 		:WaitForChild"ScrollingFrame"
@@ -8948,7 +8312,7 @@ function atptg2ismonsterneargen(generator, radius)
 	if currentRoom then
 		for _, model in pairs(currentRoom:GetChildren()) do
 			if model:IsA("Model") then
-				local monstersFolder = model:FindFirstChild("Monsters")
+				local monstersFolder = getMap():FindFirstChild("Monsters")
 				if monstersFolder then
 					for _, monster in pairs(monstersFolder:GetChildren()) do
 						if monster:IsA("Model") and monster.PrimaryPart then
@@ -8992,7 +8356,7 @@ function tptg()
 						local generatorCFrame = randomGenerator:GetPrimaryPartCFrame()
 						local forwardPosition = generatorCFrame.Position + generatorCFrame.LookVector * 4
 						local targetCFrame = CFrame.new(forwardPosition, generatorCFrame.Position) * CFrame.new(0, 2.3, 0)
-						character:SetPrimaryPartCFrame(targetCFrame)
+						teleportplr(targetCFrame)
 						hastpdtoagen = true -- Mark that we've teleported
 					end
 				end
@@ -9025,11 +8389,7 @@ end
 
 -- Make the functions global instead of returning them
 function atptg2startmonitoring()
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-	local inGamePlayerModel = workspace:FindFirstChild("InGamePlayers"):FindFirstChild(player.Name)
-
-	local decodingObject = inGamePlayerModel:FindFirstChild("Decoding")
+	local decodingObject = noxious["local character"]:FindFirstChild("Decoding")
 	if atptg2ismonitoring then return end -- Already monitoring
 
 	atptg2ismonitoring = true
@@ -9082,7 +8442,7 @@ end
 
 -- Function to enable the visibility of the GroupRank TextLabel
 function enableGroupRankVisibility()
-	local groupRankLabel = character:WaitForChild"HumanoidRootPart":WaitForChild"NameTag":WaitForChild"Frame":WaitForChild"GroupRank"		
+	local groupRankLabel = noxious["local root"]:WaitForChild"NameTag":WaitForChild"Frame":WaitForChild"GroupRank"		
 	if groupRankLabel then
 		groupRankLabel.Visible = true
 	end
@@ -9090,7 +8450,7 @@ end
 
 -- Function to disable the visibility of the GroupRank TextLabel
 function disableGroupRankVisibility()
-	local groupRankLabel = character:WaitForChild"HumanoidRootPart":WaitForChild"NameTag":WaitForChild"Frame":WaitForChild"GroupRank"		
+	local groupRankLabel = noxious["local root"]:WaitForChild"NameTag":WaitForChild"Frame":WaitForChild"GroupRank"		
 	if groupRankLabel then
 		groupRankLabel.Visible = false
 	end
@@ -9160,7 +8520,6 @@ function updateMaxDistance(player, distance)
 			end
 		end
 	end
-
 	if player.Character then
 		onCharacterAdded(player.Character)
 	end
@@ -9200,7 +8559,7 @@ local autosk2 = false
 function skillcheck2()
 	noxious["run service"].Heartbeat:Connect(function()
 		if autosk2 == true then
-			game.ReplicatedStorage.Events.SkillcheckUpdate.OnClientInvoke = function() return "supercomplete" end
+			noxious["replicated storage"].Events.SkillcheckUpdate.OnClientInvoke = function() return true end
 		end
 	end)
 end
@@ -9215,32 +8574,9 @@ end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
-function enablegodmode()
-	local axis = 0
-
-	game.ReplicatedStorage.Events.GetCharacterPosition.OnClientInvoke = function() 
-		axis += 1
-		local axisVec = Vector3.new(0,0,0)
-		if axis == 1 then
-			axisVec = Vector3.fromAxis(Enum.Axis.Front)
-		elseif axis == 2 then
-			axisVec = Vector3.fromAxis(Enum.Axis.Back)
-		elseif axis == 3 then
-			axisVec = Vector3.fromAxis(Enum.Axis.Left)
-		elseif axis == 4 then
-			axisVec = Vector3.fromAxis(Enum.Axis.Right)
-		elseif axis == 5 then
-			axisVec = -Vector3.fromAxis(Enum.Axis.Front)
-		elseif axis == 6 then
-			axisVec = -Vector3.fromAxis(Enum.Axis.Back)
-		elseif axis == 7 then
-			axisVec = -Vector3.fromAxis(Enum.Axis.Left)
-		elseif axis == 8 then
-			axisVec = -Vector3.fromAxis(Enum.Axis.Right)
-			axis = 0
-		end
-
-		return axisVec * 5000
+function offsettwisted(x, z)
+	noxious["replicated storage"].Events.GetCharacterPosition.OnClientInvoke = function() 
+		return noxious["local character"]:GetPivot().Position + Vector3.new(x, 0, z)
 	end
 end
 
@@ -9277,14 +8613,10 @@ function fling(user)
 	end
 
 	local Message = function(_Title, _Text, Time)
-		game:GetService("StarterGui"):SetCore("SendNotification", { Title = _Title, Text = _Text, Duration = Time })
+		noxious["starter gui"]:SetCore("SendNotification", { Title = _Title, Text = _Text, Duration = Time })
 	end
 
 	local SkidFling = function(TargetPlayer)
-		local Character = noxious["local player"].Character
-		local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
-		local RootPart = Humanoid and Humanoid.RootPart
-
 		local TCharacter = TargetPlayer.Character
 		local THumanoid
 		local TRootPart
@@ -9295,8 +8627,8 @@ function fling(user)
 		if TCharacter:FindFirstChildOfClass("Humanoid") then
 			THumanoid = TCharacter:FindFirstChildOfClass("Humanoid")
 		end
-		if THumanoid and THumanoid.RootPart then
-			TRootPart = THumanoid.RootPart
+		if THumanoid and THumanoid.noxious["local root"] then
+			TRootPart = THumanoid.noxious["local root"]
 		end
 		if TCharacter:FindFirstChild("Head") then
 			THead = TCharacter.Head
@@ -9307,29 +8639,26 @@ function fling(user)
 		if Accessory and Accessory:FindFirstChild("Handle") then
 			Handle = Accessory.Handle
 		end
+		
+		if noxious["local root"].Velocity.Magnitude < 50 then
+			getgenv().OldPos = noxious["local root"].CFrame
+		end
+		if THead then
+			noxious["current camera"].CameraSubject = THead
+		elseif not THead and Handle then
+			noxious["current camera"].CameraSubject = Handle
+		elseif THumanoid and TRootPart then
+			noxious["current camera"].CameraSubject = THumanoid
+		end
+		if not TCharacter:FindFirstChildWhichIsA("BasePart") then
+			return
+		end
 
-		if Character and Humanoid and RootPart then
-			if RootPart.Velocity.Magnitude < 50 then
-				getgenv().OldPos = RootPart.CFrame
-			end
-			if THumanoid and THumanoid.Sit and not AllBool then
-			end
-			if THead then
-				noxious["current camera"].CameraSubject = THead
-			elseif not THead and Handle then
-				noxious["current camera"].CameraSubject = Handle
-			elseif THumanoid and TRootPart then
-				noxious["current camera"].CameraSubject = THumanoid
-			end
-			if not TCharacter:FindFirstChildWhichIsA("BasePart") then
-				return
-			end
-
-			local FPos = function(BasePart, Pos, Ang)
-				RootPart.CFrame = CFrame.new(BasePart.Position) * Pos * Ang
-				Character:SetPrimaryPartCFrame(CFrame.new(BasePart.Position) * Pos * Ang)
-				RootPart.Velocity = Vector3.new(9e7, 9e7 * 10, 9e7)
-				RootPart.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
+		local FPos = function(BasePart, Pos, Ang)
+			noxious["local root"].CFrame = CFrame.new(BasePart.Position) * Pos * Ang
+			teleportplr(CFrame.new(BasePart.Position) * Pos * Ang)
+			noxious["local root"].Velocity = Vector3.new(9e7, 9e7 * 10, 9e7)
+			noxious["local root"].RotVelocity = Vector3.new(9e8, 9e8, 9e8)
 			end
 
 			local SFBasePart = function(BasePart)
@@ -9338,7 +8667,7 @@ function fling(user)
 				local Angle = 0
 
 				repeat
-					if RootPart and THumanoid then
+					if noxious["local root"] and THumanoid then
 						if BasePart.Velocity.Magnitude < 50 then
 							Angle = Angle + 100
 
@@ -9393,18 +8722,18 @@ function fling(user)
 					else
 						break
 					end
-				until BasePart.Velocity.Magnitude > 500 or BasePart.Parent ~= TargetPlayer.Character or TargetPlayer.Parent ~= Players or not TargetPlayer.Character == TCharacter or THumanoid.Sit or Humanoid.Health <= 0 or tick() > Time + TimeToWait
+				until BasePart.Velocity.Magnitude > 500 or BasePart.Parent ~= TargetPlayer.Character or TargetPlayer.Parent ~= Players or not TargetPlayer.Character == TCharacter or THumanoid.Sit or noxious["local humanoid"].Health <= 0 or tick() > Time + TimeToWait
 			end
 
 			workspace.FallenPartsDestroyHeight = 0 / 0
 
 			local BV = Instance.new("BodyVelocity")
 			BV.Name = "EpixVel"
-			BV.Parent = RootPart
+			BV.Parent = noxious["local root"]
 			BV.Velocity = Vector3.new(9e8, 9e8, 9e8)
 			BV.MaxForce = Vector3.new(1 / 0, 1 / 0, 1 / 0)
 
-			Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+			noxious["local humanoid"]:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
 
 			if TRootPart then
 				SFBasePart(TRootPart)
@@ -9415,20 +8744,20 @@ function fling(user)
 			end
 
 			BV:Destroy()
-			Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+			noxious["local humanoid"]:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
 			noxious["current camera"].CameraSubject = Humanoid
 
 			repeat
-				RootPart.CFrame = getgenv().OldPos * CFrame.new(0, .5, 0)
-				Character:SetPrimaryPartCFrame(getgenv().OldPos * CFrame.new(0, .5, 0))
-				Humanoid:ChangeState("GettingUp")
-				table.foreach(Character:GetChildren(), function(_, x)
+				noxious["local root"].CFrame = getgenv().OldPos * CFrame.new(0, .5, 0)
+				teleportplr(getgenv().OldPos * CFrame.new(0, .5, 0))
+				noxious["local humanoid"]:ChangeState("GettingUp")
+				table.foreach(noxious["local character"]:GetChildren(), function(_, x)
 					if x:IsA("BasePart") then
 						x.Velocity, x.RotVelocity = Vector3.new(), Vector3.new()
 					end
 				end)
 				task.wait()
-			until (RootPart.Position - getgenv().OldPos.p).Magnitude < 25
+			until (noxious["local root"].Position - getgenv().OldPos.p).Magnitude < 25
 			workspace.FallenPartsDestroyHeight = getgenv().FPDH
 		end
 	end
@@ -9463,7 +8792,7 @@ local isRunning = false -- Flag to control whether the texture-changing process 
 
 -- Function to change the texture of the head in sequence
 function changeHeadTextures()
-	local head = character:WaitForChild"Head"		
+	local head = noxious["local character"]:WaitForChild"Head"		
 	while isRunning do
 		for _, texture in ipairs(textureSequence) do
 			head.TextureID = texture.textureId  -- Change the TextureID
@@ -9475,9 +8804,7 @@ function changeHeadTextures()
 end
 
 -- Function to enable the texture-changing process
-function enableTextureChange()
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	character:WaitForChild"Head"		
+function enableTextureChange()		
 	local playerModel = workspace:FindFirstChild"Players"or workspace:FindFirstChild"InGamePlayers"
 	-- Check for ToonName
 
@@ -9525,20 +8852,17 @@ end
 local tpwalking = false  -- Flag to control the teleport walking
 local currentSpeed = 10  -- Default speed
 
-function tpwalk(speaker, speed)
-	tpwalking = true
-	local chr = speaker.Character
-	local hum = chr and chr:FindFirstChildWhichIsA"Humanoid"		
+function tpwalk(speed)
+	tpwalking = true	
 	local hb = noxious["run service"].Heartbeat
-
-	-- Continuously teleport the character while tpwalking is true
-	while tpwalking and chr and hum and hum.Parent do
+	while tpwalking and noxious["local character"] and noxious["local humanoid"] and noxious["local humanoid"].Parent do
 		local delta = hb:Wait()
-		if hum.MoveDirection.Magnitude > 0 then
+		local md = noxious["local humanoid"].MoveDirection
+		if md.Magnitude > 0 then
 			if speed and tonumber(speed) then
 				currentSpeed = tonumber(speed) -- Update the speed if a valid number is provided
 			end
-			chr:TranslateBy(hum.MoveDirection * currentSpeed * delta * 10)
+			noxious["local character"]:TranslateBy(md * currentSpeed * delta * 10)
 		end
 	end
 end
@@ -9555,14 +8879,9 @@ local CFspeed = 50 -- Default speed for Clip Frame Fly
 
 -- Function to enable Clip Frame Fly
 function enableClipFrameFly(speed)
-	local character = noxious["local player"].Character
-	if not character then return end
-
-	local humanoid = character:FindFirstChildOfClass"Humanoid"		
-	local head = character:WaitForChild"Head"
-
-	if humanoid and head then
-		humanoid.PlatformStand = true
+	local head = noxious["local character"]:WaitForChild"Head"
+	if noxious["local humanoid"] and head then
+		noxious["local humanoid"].PlatformStand = true
 		head.Anchored = true
 
 		-- Disconnect existing loop if any
@@ -9587,14 +8906,9 @@ end
 
 -- Function to disable Clip Frame Fly
 function disableClipFrameFly()
-	local character = noxious["local player"].Character
-	if not character then return end
-
-	local humanoid = character:FindFirstChildOfClass"Humanoid"		
-	local head = character:FindFirstChild"Head"
-
+	local head = noxious["local character"]:FindFirstChild"Head"
 	if CFloop then CFloop:Disconnect() end -- Disconnect the loop
-	if humanoid then humanoid.PlatformStand = false end
+	if noxious["local humanoid"] then noxious["local humanoid"].PlatformStand = false end
 	if head then head.Anchored = false end
 end
 
@@ -9800,18 +9114,8 @@ end
 local isrunofs30rpnameenabled = false -- Control variable to enable/disable the script
 
 function runofs30zrpname()
-	local character = noxious["local player"].Character
-	if not character then return end
-
-	local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-	if not humanoidRootPart then return end
-
-	local nameTag = humanoidRootPart:FindFirstChild("NameTag")
-	if not nameTag then return end
-
+	local nameTag = noxious["local root"]:FindFirstChild("NameTag")
 	local changeNameRemote = nameTag:FindFirstChild("ChangeName")
-	if not changeNameRemote then return end
-
 	-- Message sequence with individual delays
 	local messages = {
 		{display = "Sempiterna", delay = 0.55},
@@ -9851,25 +9155,9 @@ end
 
 function disablerunofs30zrpname()
 	isrunofs30rpnameenabled = false
-
-	-- Restore the original name using the server
-	local character = noxious["local player"].Character
-	if not character then return end
-
-	local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-	if not humanoidRootPart then return end
-
-	local nameTag = humanoidRootPart:FindFirstChild("NameTag")
-	if not nameTag then return end
-
+	local nameTag = noxious["local root"]:FindFirstChild("NameTag")
 	local changeNameRemote = nameTag:FindFirstChild("ChangeName")
-	if not changeNameRemote then return end
-
-	local args = {
-		[1] = noxious["local player"].DisplayName, -- Original Display Name
-		[2] = 0
-	}
-	changeNameRemote:InvokeServer(unpack(args))
+	changeNameRemote:InvokeServer(noxious["local player"].DisplayName, 0)
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
@@ -9878,18 +9166,15 @@ local isCheckingGates = false -- Controls whether the gate checking is active
 local checkGatesConnection -- Stores the RenderStepped connection
 
 function TP(Target)
-	workspace.Gravity = 0
-	local Character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
 	if typeof(Target) == "Instance" and Target:IsA"BasePart"then
-		Character:SetPrimaryPartCFrame(Target.CFrame)
+		teleportplr(Target.CFrame)
 	end
-	workspace.Gravity = 196.2
 end
 
 function checkGates()
 	for _, model in ipairs(workspace:GetChildren()) do
 		if model:IsA"Model"and model.Name:lower() == "gate" then
-			local guiPart = model:FindFirstChild"GuiPart"				
+			local guiPart = getMap():FindFirstChild"GuiPart"				
 			if guiPart and guiPart:IsA"BasePart"then
 				local surfaceGui = guiPart:FindFirstChild"SurfaceGui"					
 				if surfaceGui then
@@ -9987,7 +9272,7 @@ function enableHealthNotifier()
 			if model:IsA("Model") then
 				-- Find the Humanoid within the model
 				local humanoid = model:FindFirstChildOfClass("Humanoid")
-				local config = model:FindFirstChild("Config")
+				local config = getMap():FindFirstChild("Config")
 				local characterName = config and config:FindFirstChild("CharacterName") and config.CharacterName.Value or "Unknown"
 
 				if humanoid and humanoid.Health == 1 and not chatnotifiedPlayers2[model.Name] then
@@ -10038,7 +9323,7 @@ function enableHealthChatMonitor()
 			if model:IsA("Model") then
 				-- Find the Humanoid within the model
 				local humanoid = model:FindFirstChildOfClass("Humanoid")
-				local config = model:FindFirstChild("Config")
+				local config = getMap():FindFirstChild("Config")
 				local characterName = config and config:FindFirstChild("CharacterName") and config.CharacterName.Value or "Unknown"
 
 				if humanoid and humanoid.Health == 1 and not chatnotifiedPlayers[model.Name] then
@@ -10086,7 +9371,7 @@ function enableDeadnotifier()
 		-- Track all players currently in the folder
 		for _, model in ipairs(inGamePlayers:GetChildren()) do
 			if model:IsA("Model") then
-				local config = model:FindFirstChild("Config")
+				local config = getMap():FindFirstChild("Config")
 				local characterName = config and config:FindFirstChild("CharacterName") and config.CharacterName.Value or "Unknown"
 				currentPlayers2[model.Name] = characterName
 
@@ -10145,7 +9430,7 @@ function enableDeadChatMonitor()
 		-- Track all players currently in the folder
 		for _, model in ipairs(inGamePlayers:GetChildren()) do
 			if model:IsA("Model") then
-				local config = model:FindFirstChild("Config")
+				local config = getMap():FindFirstChild("Config")
 				local characterName = config and config:FindFirstChild("CharacterName") and config.CharacterName.Value or "Unknown"
 				currentPlayers[model.Name] = characterName
 
@@ -10212,7 +9497,7 @@ function startTwistedsNotifierLoop()
 			-- Collect all Twisteds
 			for _, model in ipairs(currentRoom:GetChildren()) do
 				if model:IsA("Model") then
-					local monstersFolder = model:FindFirstChild("Monsters")
+					local monstersFolder = getMap():FindFirstChild("Monsters")
 					if monstersFolder then
 						for _, monster in ipairs(monstersFolder:GetChildren()) do
 							totalMonsters2 += 1 -- Increment the count of monsters
@@ -10249,7 +9534,7 @@ function startTwistedsNotifierLoop()
 		for twistedName2, _ in pairs(notifiedTwisteds2) do
 			local stillExists = false
 			for _, model in ipairs(currentRoom:GetChildren()) do
-				local monstersFolder = model:FindFirstChild("Monsters")
+				local monstersFolder = getMap():FindFirstChild("Monsters")
 				if monstersFolder and monstersFolder:FindFirstChild(twistedName2) then
 					stillExists = true
 					break
@@ -10305,7 +9590,7 @@ function startTwistedsNotifyLoop()
 			-- Collect all Twisteds
 			for _, model in ipairs(currentRoom:GetChildren()) do
 				if model:IsA("Model") then
-					local monstersFolder = model:FindFirstChild("Monsters")
+					local monstersFolder = getMap():FindFirstChild("Monsters")
 					if monstersFolder then
 						for _, monster in ipairs(monstersFolder:GetChildren()) do
 							totalMonsters += 1 -- Increment the count of monsters
@@ -10345,7 +9630,7 @@ function startTwistedsNotifyLoop()
 		for twistedName, _ in pairs(notifiedTwisteds) do
 			local stillExists = false
 			for _, model in ipairs(currentRoom:GetChildren()) do
-				local monstersFolder = model:FindFirstChild("Monsters")
+				local monstersFolder = getMap():FindFirstChild("Monsters")
 				if monstersFolder and monstersFolder:FindFirstChild(twistedName) then
 					stillExists = true
 					break
@@ -10411,7 +9696,7 @@ function startNotifyItemsLoop()
 	while chatItemsLoopEnabled2 do
 		for _, model in ipairs(currentRoom:GetChildren()) do
 			if model:IsA("Model") then
-				local itemsFolder = model:FindFirstChild("Items")
+				local itemsFolder = getMap():FindFirstChild("Items")
 				if itemsFolder then
 					local itemsFound2 = {}
 					for _, item in ipairs(itemsFolder:GetChildren()) do
@@ -10443,7 +9728,7 @@ function startNotifyItemsLoop()
 		for itemName2, _ in pairs(chattedItems2) do
 			local stillExists2 = false
 			for _, model in ipairs(currentRoom:GetChildren()) do
-				local itemsFolder = model:FindFirstChild("Items")
+				local itemsFolder = getMap():FindFirstChild("Items")
 				if itemsFolder and itemsFolder:FindFirstChild(itemName2) then
 					stillExists2 = true
 					break
@@ -10497,7 +9782,7 @@ function startChatItemsLoop()
 	while chatItemsLoopEnabled do
 		for _, model in ipairs(currentRoom:GetChildren()) do
 			if model:IsA("Model") then
-				local itemsFolder = model:FindFirstChild("Items")
+				local itemsFolder = getMap():FindFirstChild("Items")
 				if itemsFolder then
 					local itemsFound = {}
 					for _, item in ipairs(itemsFolder:GetChildren()) do
@@ -10533,7 +9818,7 @@ function startChatItemsLoop()
 		for itemName, _ in pairs(chattedItems) do
 			local stillExists = false
 			for _, model in ipairs(currentRoom:GetChildren()) do
-				local itemsFolder = model:FindFirstChild("Items")
+				local itemsFolder = getMap():FindFirstChild("Items")
 				if itemsFolder and itemsFolder:FindFirstChild(itemName) then
 					stillExists = true
 					break
@@ -10600,7 +9885,7 @@ function runActiveAbility(targetName)
 	}
 
 	local success, err = pcall(function()
-		game:GetService("ReplicatedStorage").Events.AbilityEvent:InvokeServer(unpack(args))
+		noxious["replicated storage"].Events.AbilityEvent:InvokeServer(unpack(args))
 	end)
 
 	if success then
@@ -10709,36 +9994,31 @@ function disablewalkfling()
 end
 
 function enablewalkfling()
-	local humanoid = noxious["local player"].Character:FindFirstChildWhichIsA("Humanoid")
-	if humanoid then
-		humanoid.Died:Connect(function()
+	if noxious["local humanoid"] then
+		noxious["local humanoid"].Died:Connect(function()
 			disablewalkfling()
 		end)
 	end
 
 	local walkflinging = true
 	repeat noxious["run service"].Heartbeat:Wait()
-		local character = noxious["local player"].Character
-		local root = getRoot(character)
 		local vel, movel = nil, 0.1
 
-		while not (character and character.Parent and root and root.Parent) do
-			noxious["run service"].Heartbeat:Wait()
-			character = noxious["local player"].Character
-			root = getRoot(character)
+		while not (noxious["local character"] and noxious["local character"].Parent and noxious["local root"] and noxious["local root"].Parent) do
+			task.wait()
 		end
 
-		vel = root.Velocity
-		root.Velocity = vel * 1000000 + Vector3.new(0, 1000000, 0)
+		vel = noxious["local root"].Velocity
+		noxious["local root"].Velocity = vel * 1000000 + Vector3.new(0, 1000000, 0)
 
 		noxious["run service"].RenderStepped:Wait()
-		if character and character.Parent and root and root.Parent then
-			root.Velocity = vel
+		if noxious["local character"] and noxious["local character"].Parent and noxious["local root"] and noxious["local root"].Parent then
+			noxious["local root"].Velocity = vel
 		end
 
 		noxious["run service"].Stepped:Wait()
-		if character and character.Parent and root and root.Parent then
-			root.Velocity = vel + Vector3.new(0, movel, 0)
+		if noxious["local character"] and noxious["local character"].Parent and noxious["local root"] and noxious["local root"].Parent then
+			noxious["local root"].Velocity = vel + Vector3.new(0, movel, 0)
 			movel = movel * -1
 		end
 	until walkflinging == false
@@ -10747,9 +10027,6 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function view(target)
-	local camera = noxious["current camera"]
-
-	-- Resolve the target player
 	local function getTargetPlayer(target)
 		if target == "me" then
 			return noxious["local player"]
@@ -10779,20 +10056,15 @@ function view(target)
 		return
 	end
 
-	-- Find the target's head
 	local targetCharacter = targetPlayer.Character
 	if targetCharacter and targetCharacter:FindFirstChild("Head") then
-		camera.CameraSubject = targetCharacter.Head
+		noxious["current camera"].CameraSubject = targetCharacter.Head
 	end
 end
 
 function unview()
-	local camera = noxious["current camera"]
-
-	-- Ensure the local player exists and has a head
-	local character = noxious["local player"].Character
-	if character and character:FindFirstChild("Head") then
-		camera.CameraSubject = character.Head
+	if noxious["local character"] and noxious["local character"]:FindFirstChild("Head") then
+		noxious["current camera"].CameraSubject = noxious["local character"].Head
 	end
 end
 
@@ -10839,112 +10111,110 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function sproutcutout()
-	noxious["local player"].Character.Body.MeshId = "rbxassetid://14685582359"
-	noxious["local player"].Character.Body.TextureID = "rbxassetid://14685585037"
-	noxious["local player"].Character.ArmL.Transparency = 1
-	noxious["local player"].Character.ArmL2.Transparency = 1
-	noxious["local player"].Character.ArmR.Transparency = 1
-	noxious["local player"].Character.ArmR2.Transparency = 1
-	noxious["local player"].Character.Hair.Transparency = 1
-	noxious["local player"].Character.HandL.Transparency = 1
-	noxious["local player"].Character.HandR.Transparency = 1
-	noxious["local player"].Character.Head.Transparency = 1
-	noxious["local player"].Character.LegL.Transparency = 1
-	noxious["local player"].Character.LegL2.Transparency = 1
-	noxious["local player"].Character.LegR.Transparency = 1
-	noxious["local player"].Character.LegR2.Transparency = 1
+	noxious["local character"].Body.MeshId = "rbxassetid://14685582359"
+	noxious["local character"].Body.TextureID = "rbxassetid://14685585037"
+	noxious["local character"].ArmL.Transparency = 1
+	noxious["local character"].ArmL2.Transparency = 1
+	noxious["local character"].ArmR.Transparency = 1
+	noxious["local character"].ArmR2.Transparency = 1
+	noxious["local character"].Hair.Transparency = 1
+	noxious["local character"].HandL.Transparency = 1
+	noxious["local character"].HandR.Transparency = 1
+	noxious["local character"].Head.Transparency = 1
+	noxious["local character"].LegL.Transparency = 1
+	noxious["local character"].LegL2.Transparency = 1
+	noxious["local character"].LegR.Transparency = 1
+	noxious["local character"].LegR2.Transparency = 1
 end
 
 function dandycutout()
-	noxious["local player"].Character.Body.MeshId = "rbxassetid://14685044008"
-	noxious["local player"].Character.Body.TextureID = "rbxassetid://14685046783"
-	noxious["local player"].Character.ArmL.Transparency = 1
-	noxious["local player"].Character.ArmL2.Transparency = 1
-	noxious["local player"].Character.ArmR.Transparency = 1
-	noxious["local player"].Character.ArmR2.Transparency = 1
-	noxious["local player"].Character.Hair.Transparency = 1
-	noxious["local player"].Character.HandL.Transparency = 1
-	noxious["local player"].Character.HandR.Transparency = 1
-	noxious["local player"].Character.Head.Transparency = 1
-	noxious["local player"].Character.LegL.Transparency = 1
-	noxious["local player"].Character.LegL2.Transparency = 1
-	noxious["local player"].Character.LegR.Transparency = 1
-	noxious["local player"].Character.LegR2.Transparency = 1
+	noxious["local character"].Body.MeshId = "rbxassetid://14685044008"
+	noxious["local character"].Body.TextureID = "rbxassetid://14685046783"
+	noxious["local character"].ArmL.Transparency = 1
+	noxious["local character"].ArmL2.Transparency = 1
+	noxious["local character"].ArmR.Transparency = 1
+	noxious["local character"].ArmR2.Transparency = 1
+	noxious["local character"].Hair.Transparency = 1
+	noxious["local character"].HandL.Transparency = 1
+	noxious["local character"].HandR.Transparency = 1
+	noxious["local character"].Head.Transparency = 1
+	noxious["local character"].LegL.Transparency = 1
+	noxious["local character"].LegL2.Transparency = 1
+	noxious["local character"].LegR.Transparency = 1
+	noxious["local character"].LegR2.Transparency = 1
 end
 
 function shellycutout()
-	noxious["local player"].Character.Body.MeshId = "rbxassetid://14687965432"
-	noxious["local player"].Character.Body.TextureID = "rbxassetid://14687967976"
-	noxious["local player"].Character.ArmL.Transparency = 1
-	noxious["local player"].Character.ArmL2.Transparency = 1
-	noxious["local player"].Character.ArmR.Transparency = 1
-	noxious["local player"].Character.ArmR2.Transparency = 1
-	noxious["local player"].Character.Hair.Transparency = 1
-	noxious["local player"].Character.HandL.Transparency = 1
-	noxious["local player"].Character.HandR.Transparency = 1
-	noxious["local player"].Character.Head.Transparency = 1
-	noxious["local player"].Character.LegL.Transparency = 1
-	noxious["local player"].Character.LegL2.Transparency = 1
-	noxious["local player"].Character.LegR.Transparency = 1
-	noxious["local player"].Character.LegR2.Transparency = 1
+	noxious["local character"].Body.MeshId = "rbxassetid://14687965432"
+	noxious["local character"].Body.TextureID = "rbxassetid://14687967976"
+	noxious["local character"].ArmL.Transparency = 1
+	noxious["local character"].ArmL2.Transparency = 1
+	noxious["local character"].ArmR.Transparency = 1
+	noxious["local character"].ArmR2.Transparency = 1
+	noxious["local character"].Hair.Transparency = 1
+	noxious["local character"].HandL.Transparency = 1
+	noxious["local character"].HandR.Transparency = 1
+	noxious["local character"].Head.Transparency = 1
+	noxious["local character"].LegL.Transparency = 1
+	noxious["local character"].LegL2.Transparency = 1
+	noxious["local character"].LegR.Transparency = 1
+	noxious["local character"].LegR2.Transparency = 1
 end
 
 function pebblecutout()
-	noxious["local player"].Character.Body.MeshId = "rbxassetid://14685339427"
-	noxious["local player"].Character.Body.TextureID = "rbxassetid://14685341892"
-	noxious["local player"].Character.ArmL.Transparency = 1
-	noxious["local player"].Character.ArmL2.Transparency = 1
-	noxious["local player"].Character.ArmR.Transparency = 1
-	noxious["local player"].Character.ArmR2.Transparency = 1
-	noxious["local player"].Character.Hair.Transparency = 1
-	noxious["local player"].Character.HandL.Transparency = 1
-	noxious["local player"].Character.HandR.Transparency = 1
-	noxious["local player"].Character.Head.Transparency = 1
-	noxious["local player"].Character.LegL.Transparency = 1
-	noxious["local player"].Character.LegL2.Transparency = 1
-	noxious["local player"].Character.LegR.Transparency = 1
-	noxious["local player"].Character.LegR2.Transparency = 1
+	noxious["local character"].Body.MeshId = "rbxassetid://14685339427"
+	noxious["local character"].Body.TextureID = "rbxassetid://14685341892"
+	noxious["local character"].ArmL.Transparency = 1
+	noxious["local character"].ArmL2.Transparency = 1
+	noxious["local character"].ArmR.Transparency = 1
+	noxious["local character"].ArmR2.Transparency = 1
+	noxious["local character"].Hair.Transparency = 1
+	noxious["local character"].HandL.Transparency = 1
+	noxious["local character"].HandR.Transparency = 1
+	noxious["local character"].Head.Transparency = 1
+	noxious["local character"].LegL.Transparency = 1
+	noxious["local character"].LegL2.Transparency = 1
+	noxious["local character"].LegR.Transparency = 1
+	noxious["local character"].LegR2.Transparency = 1
 end
 
 function astrocutout()
-	noxious["local player"].Character.Body.MeshId = "rbxassetid://14688397977"
-	noxious["local player"].Character.Body.TextureID = "rbxassetid://14688394959"
-	noxious["local player"].Character.ArmL.Transparency = 1
-	noxious["local player"].Character.ArmL2.Transparency = 1
-	noxious["local player"].Character.ArmR.Transparency = 1
-	noxious["local player"].Character.ArmR2.Transparency = 1
-	noxious["local player"].Character.Hair.Transparency = 1
-	noxious["local player"].Character.HandL.Transparency = 1
-	noxious["local player"].Character.HandR.Transparency = 1
-	noxious["local player"].Character.Head.Transparency = 1
-	noxious["local player"].Character.LegL.Transparency = 1
-	noxious["local player"].Character.LegL2.Transparency = 1
-	noxious["local player"].Character.LegR.Transparency = 1
-	noxious["local player"].Character.LegR2.Transparency = 1
+	noxious["local character"].Body.MeshId = "rbxassetid://14688397977"
+	noxious["local character"].Body.TextureID = "rbxassetid://14688394959"
+	noxious["local character"].ArmL.Transparency = 1
+	noxious["local character"].ArmL2.Transparency = 1
+	noxious["local character"].ArmR.Transparency = 1
+	noxious["local character"].ArmR2.Transparency = 1
+	noxious["local character"].Hair.Transparency = 1
+	noxious["local character"].HandL.Transparency = 1
+	noxious["local character"].HandR.Transparency = 1
+	noxious["local character"].Head.Transparency = 1
+	noxious["local character"].LegL.Transparency = 1
+	noxious["local character"].LegL2.Transparency = 1
+	noxious["local character"].LegR.Transparency = 1
+	noxious["local character"].LegR2.Transparency = 1
 end
 
 function veecutout()
-	noxious["local player"].Character.Body.MeshId = "rbxassetid://14687687688"
-	noxious["local player"].Character.Body.TextureID = "rbxassetid://14687691668"
-	noxious["local player"].Character.ArmL.Transparency = 1
-	noxious["local player"].Character.ArmL2.Transparency = 1
-	noxious["local player"].Character.ArmR.Transparency = 1
-	noxious["local player"].Character.ArmR2.Transparency = 1
-	noxious["local player"].Character.Hair.Transparency = 1
-	noxious["local player"].Character.HandL.Transparency = 1
-	noxious["local player"].Character.HandR.Transparency = 1
-	noxious["local player"].Character.Head.Transparency = 1
-	noxious["local player"].Character.LegL.Transparency = 1
-	noxious["local player"].Character.LegL2.Transparency = 1
-	noxious["local player"].Character.LegR.Transparency = 1
-	noxious["local player"].Character.LegR2.Transparency = 1
+	noxious["local character"].Body.MeshId = "rbxassetid://14687687688"
+	noxious["local character"].Body.TextureID = "rbxassetid://14687691668"
+	noxious["local character"].ArmL.Transparency = 1
+	noxious["local character"].ArmL2.Transparency = 1
+	noxious["local character"].ArmR.Transparency = 1
+	noxious["local character"].ArmR2.Transparency = 1
+	noxious["local character"].Hair.Transparency = 1
+	noxious["local character"].HandL.Transparency = 1
+	noxious["local character"].HandR.Transparency = 1
+	noxious["local character"].Head.Transparency = 1
+	noxious["local character"].LegL.Transparency = 1
+	noxious["local character"].LegL2.Transparency = 1
+	noxious["local character"].LegR.Transparency = 1
+	noxious["local character"].LegR2.Transparency = 1
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
 function valentinesshelly()
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	character:WaitForChild"Head"		
 	local playerModel = workspace:FindFirstChild"Players"or workspace:FindFirstChild"InGamePlayers"
 
 	local toonName = playerModel and playerModel:FindFirstChild(noxious["local player"].Name) and playerModel[noxious["local player"].Name]:FindFirstChild"ToonName"
@@ -10979,8 +10249,6 @@ function valentinesshelly()
 end
 
 function valentinesgigi()
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	character:WaitForChild"Head"		
 	local playerModel = workspace:FindFirstChild"Players"or workspace:FindFirstChild"InGamePlayers"
 
 	local toonName = playerModel and playerModel:FindFirstChild(noxious["local player"].Name) and playerModel[noxious["local player"].Name]:FindFirstChild"ToonName"
@@ -11017,8 +10285,6 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function twistedpoppy()
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-	character:WaitForChild"Head"		
 	local playerModel = workspace:FindFirstChild"Players"or workspace:FindFirstChild"InGamePlayers"
 
 	local toonName = playerModel and playerModel:FindFirstChild(noxious["local player"].Name) and playerModel[noxious["local player"].Name]:FindFirstChild"ToonName"
@@ -11042,79 +10308,79 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function headless()
-	spawn(function() noxious["local player"].Character.Hair.Transparency = 1 end)
-	spawn(function() noxious["local player"].Character.Head.Transparency = 1 end)
+	spawn(function() noxious["local character"].Hair.Transparency = 1 end)
+	spawn(function() noxious["local character"].Head.Transparency = 1 end)
 end
 
 function unheadless()
-	spawn(function() noxious["local player"].Character.Hair.Transparency = 0 end)
-	spawn(function() noxious["local player"].Character.Head.Transparency = 0 end)
+	spawn(function() noxious["local character"].Hair.Transparency = 0 end)
+	spawn(function() noxious["local character"].Head.Transparency = 0 end)
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
 function bodiless()
-	spawn(function() noxious["local player"].Character.ArmL.Transparency = 1 end)
-	spawn(function() noxious["local player"].Character.ArmL2.Transparency = 1 end)
-	spawn(function() noxious["local player"].Character.ArmR.Transparency = 1 end)
-	spawn(function() noxious["local player"].Character.ArmR2.Transparency = 1 end)
-	spawn(function() noxious["local player"].Character.HandL.Transparency = 1 end)
-	spawn(function() noxious["local player"].Character.Body.Transparency = 1 end)
-	spawn(function() noxious["local player"].Character.HandR.Transparency = 1 end)
-	spawn(function() noxious["local player"].Character.LegL.Transparency = 1 end)
-	spawn(function() noxious["local player"].Character.LegL2.Transparency = 1 end)
-	spawn(function() noxious["local player"].Character.LegR.Transparency = 1 end)
-	spawn(function() noxious["local player"].Character.LegR2.Transparency = 1 end)
+	spawn(function() noxious["local character"].ArmL.Transparency = 1 end)
+	spawn(function() noxious["local character"].ArmL2.Transparency = 1 end)
+	spawn(function() noxious["local character"].ArmR.Transparency = 1 end)
+	spawn(function() noxious["local character"].ArmR2.Transparency = 1 end)
+	spawn(function() noxious["local character"].HandL.Transparency = 1 end)
+	spawn(function() noxious["local character"].Body.Transparency = 1 end)
+	spawn(function() noxious["local character"].HandR.Transparency = 1 end)
+	spawn(function() noxious["local character"].LegL.Transparency = 1 end)
+	spawn(function() noxious["local character"].LegL2.Transparency = 1 end)
+	spawn(function() noxious["local character"].LegR.Transparency = 1 end)
+	spawn(function() noxious["local character"].LegR2.Transparency = 1 end)
 end
 
 function unbodiless()
-	spawn(function() noxious["local player"].Character.ArmL.Transparency = 0 end)
-	spawn(function() noxious["local player"].Character.ArmL2.Transparency = 0 end)
-	spawn(function() noxious["local player"].Character.ArmR.Transparency = 0 end)
-	spawn(function() noxious["local player"].Character.ArmR2.Transparency = 0 end)
-	spawn(function() noxious["local player"].Character.HandL.Transparency = 0 end)
-	spawn(function() noxious["local player"].Character.Body.Transparency = 0 end)
-	spawn(function() noxious["local player"].Character.HandR.Transparency = 0 end)
-	spawn(function() noxious["local player"].Character.LegL.Transparency = 0 end)
-	spawn(function() noxious["local player"].Character.LegL2.Transparency = 0 end)
-	spawn(function() noxious["local player"].Character.LegR.Transparency = 0 end)
-	spawn(function() noxious["local player"].Character.LegR2.Transparency = 0 end)
+	spawn(function() noxious["local character"].ArmL.Transparency = 0 end)
+	spawn(function() noxious["local character"].ArmL2.Transparency = 0 end)
+	spawn(function() noxious["local character"].ArmR.Transparency = 0 end)
+	spawn(function() noxious["local character"].ArmR2.Transparency = 0 end)
+	spawn(function() noxious["local character"].HandL.Transparency = 0 end)
+	spawn(function() noxious["local character"].Body.Transparency = 0 end)
+	spawn(function() noxious["local character"].HandR.Transparency = 0 end)
+	spawn(function() noxious["local character"].LegL.Transparency = 0 end)
+	spawn(function() noxious["local character"].LegL2.Transparency = 0 end)
+	spawn(function() noxious["local character"].LegR.Transparency = 0 end)
+	spawn(function() noxious["local character"].LegR2.Transparency = 0 end)
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
 function armless()
-	spawn(function() noxious["local player"].Character.ArmL.Transparency = 1 end)
-	spawn(function() noxious["local player"].Character.ArmL2.Transparency = 1 end)
-	spawn(function() noxious["local player"].Character.ArmR.Transparency = 1 end)
-	spawn(function() noxious["local player"].Character.ArmR2.Transparency = 1 end)
-	spawn(function() noxious["local player"].Character.HandL.Transparency = 1 end)
-	spawn(function() noxious["local player"].Character.HandR.Transparency = 1 end)
+	spawn(function() noxious["local character"].ArmL.Transparency = 1 end)
+	spawn(function() noxious["local character"].ArmL2.Transparency = 1 end)
+	spawn(function() noxious["local character"].ArmR.Transparency = 1 end)
+	spawn(function() noxious["local character"].ArmR2.Transparency = 1 end)
+	spawn(function() noxious["local character"].HandL.Transparency = 1 end)
+	spawn(function() noxious["local character"].HandR.Transparency = 1 end)
 end
 
 function unarmless()
-	spawn(function() noxious["local player"].Character.ArmL.Transparency = 0 end)
-	spawn(function() noxious["local player"].Character.ArmL2.Transparency = 0 end)
-	spawn(function() noxious["local player"].Character.ArmR.Transparency = 0 end)
-	spawn(function() noxious["local player"].Character.ArmR2.Transparency = 0 end)
-	spawn(function() noxious["local player"].Character.HandL.Transparency = 0 end)
-	spawn(function() noxious["local player"].Character.HandR.Transparency = 0 end)
+	spawn(function() noxious["local character"].ArmL.Transparency = 0 end)
+	spawn(function() noxious["local character"].ArmL2.Transparency = 0 end)
+	spawn(function() noxious["local character"].ArmR.Transparency = 0 end)
+	spawn(function() noxious["local character"].ArmR2.Transparency = 0 end)
+	spawn(function() noxious["local character"].HandL.Transparency = 0 end)
+	spawn(function() noxious["local character"].HandR.Transparency = 0 end)
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
 function legless()
-	spawn(function() noxious["local player"].Character.LegL.Transparency = 1 end)
-	spawn(function() noxious["local player"].Character.LegL2.Transparency = 1 end)
-	spawn(function() noxious["local player"].Character.LegR.Transparency = 1 end)
-	spawn(function() noxious["local player"].Character.LegR2.Transparency = 1 end)
+	spawn(function() noxious["local character"].LegL.Transparency = 1 end)
+	spawn(function() noxious["local character"].LegL2.Transparency = 1 end)
+	spawn(function() noxious["local character"].LegR.Transparency = 1 end)
+	spawn(function() noxious["local character"].LegR2.Transparency = 1 end)
 end
 
 function unlegless()
-	spawn(function() noxious["local player"].Character.LegL.Transparency = 0 end)
-	spawn(function() noxious["local player"].Character.LegL2.Transparency = 0 end)
-	spawn(function() noxious["local player"].Character.LegR.Transparency = 0 end)
-	spawn(function() noxious["local player"].Character.LegR2.Transparency = 0 end)
+	spawn(function() noxious["local character"].LegL.Transparency = 0 end)
+	spawn(function() noxious["local character"].LegL2.Transparency = 0 end)
+	spawn(function() noxious["local character"].LegR.Transparency = 0 end)
+	spawn(function() noxious["local character"].LegR2.Transparency = 0 end)
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
@@ -11123,22 +10389,10 @@ end
 local savedtextureid, savedmeshid, savedsize
 local legR, legR2
 
--- Function to safely get the character and necessary parts
-function waitForCharacter()
-	local character = noxious["local player"].Character or noxious["local player"].CharacterAdded:Wait()
-
-	-- Wait until LegR and LegR2 exist
-	repeat task.wait() until character:FindFirstChild("LegR") and character:FindFirstChild("LegR2")
-
-	return character
-end
-
--- Function to save leg properties
 function saveLegProperties()
-	local character = waitForCharacter()
-	legR = character:FindFirstChild("LegR")
-	legR2 = character:FindFirstChild("LegR2")
-
+	repeat task.wait() until noxious["local character"] and noxious["local root"]
+	legR = noxious["local character"]:FindFirstChild("LegR")
+	legR2 = noxious["local character"]:FindFirstChild("LegR2")
 	if legR and legR2 then
 		savedtextureid = legR.TextureID
 		savedmeshid = legR.MeshId
@@ -11146,17 +10400,14 @@ function saveLegProperties()
 	end
 end
 
--- Initial save and set up respawn handling
 task.spawn(saveLegProperties)
 noxious["local player"].CharacterAdded:Connect(saveLegProperties)
 
 -- Function to apply Korblox transformation
 function korblox()
 	task.spawn(function()
-		local character = waitForCharacter()
-		legR = character:FindFirstChild("LegR")
-		legR2 = character:FindFirstChild("LegR2")
-
+		legR = noxious["local character"]:FindFirstChild("LegR")
+		legR2 = noxious["local character"]:FindFirstChild("LegR2")
 		if legR and legR2 then
 			legR.TextureID = "http://www.roblox.com/asset/?id=18615141631"
 			legR.MeshId = "rbxassetid://18615136546"
@@ -11169,10 +10420,8 @@ end
 -- Function to revert the changes
 function unkorblox()
 	task.spawn(function()
-		local character = waitForCharacter()
-		legR = character:FindFirstChild("LegR")
-		legR2 = character:FindFirstChild("LegR2")
-
+		legR = noxious["local character"]:FindFirstChild("LegR")
+		legR2 = noxious["local character"]:FindFirstChild("LegR2")
 		if legR and legR2 then
 			legR.TextureID = savedtextureid
 			legR.MeshId = savedmeshid
@@ -11244,7 +10493,7 @@ function code()
 		end
 	else
 		local screenGui = Instance.new"ScreenGui"		
-		screenGui.Parent = noxious["player gui"]
+		screenGui.Parent = noxious["parent for gui"]
 
 		local stop = Instance.new"Frame"		
 		stop.Parent = screenGui
@@ -11262,7 +10511,7 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 function showdiscardedgui()
-	local selectionFrame2 = noxious["local player"].PlayerGui.ScreenGui:FindFirstChild("SelectionFrame2")
+	local selectionFrame2 = noxious["player gui"].ScreenGui:FindFirstChild("SelectionFrame2")
 
 	if selectionFrame2 then
 		selectionFrame2.Visible = true
@@ -11270,7 +10519,7 @@ function showdiscardedgui()
 end
 
 function hidediscardedgui()
-	local selectionFrame2 = noxious["local player"].PlayerGui.ScreenGui:FindFirstChild("SelectionFrame2")
+	local selectionFrame2 = noxious["player gui"].ScreenGui:FindFirstChild("SelectionFrame2")
 
 	if selectionFrame2 then
 		selectionFrame2.Visible = false
@@ -11446,11 +10695,6 @@ function handlecommands(command)
 		-- run active ability
 	elseif (args[1] == "runactiveability" or args[1] == "raa") and args[2] then
 		runActiveAbility(args[2])
-
-		-- reset
-	elseif lwr == "reset" or lwr == "re" then
-		reset()
-
 		-- fake research value
 	elseif (args[1] == "changeresearch" or args[1] == "cr") and args[2] and tonumber(args[3]) then
 		local monsterName = args[2]
@@ -11857,11 +11101,14 @@ function handlecommands(command)
 	elseif lwr == "stoi" or lwr == "singthickofit" then
 		singthickofit()
 
-		-- enable godmode
-	elseif lwr == "egm" or lwr == "enablegodmode" then
-		notify("Script made by Deka.", 5)
-		enablegodmode()
-
+		-- enable offset twisted
+	elseif (lwr == "offsettwisted" or lwr == "ot") and args[2] then
+		if args[3] then notify("Please do not add spaces.", 5, "error") then return end
+		local x, z = args[2]:match("([^,]+),([^,]+)") -- split by ,
+		offsettwisted(x, z)
+		
+	elseif lwr == "restoretwisted" or lwr == "rt" then
+		restoretwisted()
 		-- show all toon cards
 	elseif lwr == "satc" or lwr == "showalltooncards" then
 		showalltooncards()
@@ -11960,6 +11207,9 @@ function handlecommands(command)
 		-- to player
 	elseif (args[1] == "to" or args[1] == "teleportto") and args[2] then
 		teleportBehindPlayer(args[2])
+		
+	elseif (args[1] == "twto" or args[1] == "tweento") and args[2] then
+		tweenBehindPlayer(args[2])
 
 		-- mobile keyboard
 	elseif lwr == "mk" or lwr == "mobilekeyboard" then
@@ -12025,12 +11275,9 @@ function handlecommands(command)
 		-- unlock all toons
 	elseif lwr == "uato" or lwr == "unlockalltoons" then
 		unlockalltoons()
-		reset()
-
 		-- unlock all trinkets
 	elseif lwr == "uatr" or lwr == "unlockalltrinkets" then
 		unlockalltrinkets()
-		reset()
 
 		-- copy gobby link
 	elseif lwr == "gd" or lwr == "gobbydiscord" then
@@ -12133,7 +11380,7 @@ function handlecommands(command)
 		hideadminpanel()
 
 		-- teleport to a generator
-	elseif lwr == "tptg" or lwr == "teleporttogenerator" then
+	elseif lwr == "tptg" or lwr == "tweentogenerator" then
 		dwtptg()
 
 		-- teleport locations
@@ -12194,6 +11441,9 @@ function handlecommands(command)
 		-- teleport to the elevator
 	elseif lwr == "tpte" or lwr == "teleporttoelevator" then
 		dwtpte()
+		
+	elseif lwr == "twte" or lwr == "tweentoelevator" then
+		dwtwte()
 
 		-- enable and disable auto teleport to elevator
 	elseif lwr == "eatpte" or lwr == "enableautoteleporttoelevator" then
@@ -12204,13 +11454,6 @@ function handlecommands(command)
 		-- break stats
 	elseif lwr == "bstats" or lwr == "breakstats" then
 		breakstats()
-
-		-- become character
-	elseif lwr == "bchar" or lwr == "becomecharacter" then
-		becomeCharacter()
-		removeanticheat()
-		wait(0.5)
-		reset()
 
 		-- delete dev doors
 	elseif lwr == "ddd" or lwr == "deletedeveloperdoors" then
@@ -12342,7 +11585,7 @@ function handlecommands(command)
 		dwunhsit2()
 		dwunhjsit()
 		unbottombang()
-		wait(0)
+		task.wait()
 		dwbang(command, noxious["local player"])
 	elseif lwr == "unbang" then
 		dwunbang()
@@ -12353,7 +11596,7 @@ function handlecommands(command)
 		dwunhsit2()
 		dwunhjsit()
 		unbottombang()
-		wait(0)
+		task.wait()
 		dwhead(command, noxious["local player"])
 	elseif lwr == "unhead" then
 		dwunhead()
@@ -12364,7 +11607,7 @@ function handlecommands(command)
 		dwunhjsit()
 		dwunhsit2()
 		unbottombang()
-		wait(0)
+		task.wait()
 		dwhsit(command, noxious["local player"])
 	elseif lwr == "unhsit" then
 		dwunhsit()
@@ -12376,7 +11619,7 @@ function handlecommands(command)
 		dwunhsit()
 		dwunhjsit()
 		unbottombang()
-		wait(0)
+		task.wait()
 		dwhsit2(command, noxious["local player"])
 	elseif lwr == "unhsit2" then
 		dwunhsit()
@@ -12388,7 +11631,7 @@ function handlecommands(command)
 		dwunhsit()
 		dwunhsit2()
 		unbottombang()
-		wait(0)
+		task.wait()
 		dwhjump(command, noxious["local player"])
 	elseif lwr == "unhjump" then
 		dwunhjsit()
@@ -12399,7 +11642,7 @@ function handlecommands(command)
 		dwunhsit()
 		dwunhsit2()
 		dwunhjsit()
-		wait(0)
+		task.wait()
 		bottombang(command, noxious["local player"])
 	elseif lwr == "unbbang" then
 		unbottombang()

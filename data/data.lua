@@ -168,17 +168,19 @@ config.commands = {
         "spawnfishbowl, spfb - spawns a bodiless finn (CLIENT)",
         "spawntv, sptv - spawns vee's head (CLIENT)",
         },
-        ["Teleports"]={
-        "(HP) teleporttoelevator, tpte - teleport to elevator",
+        ["Teleports / Travel"]={
+        "teleporttoelevator, tpte - teleport to elevator",
+        "teleportto, to [target] - teleport to specified target",
+        "tweentoelevator, twte - tween to elevator",
+        "tweentogenerator, tptg - tween to a generator",
+        "tweento, twto [target] - tween to specified target",
+        "",
         "enableautoteleporttoelevator, eatpte - enables auto tp to elevator",
         "disableautoteleporttoelevator, datpte - disables auto tp to elevator",
         "enableautoteleportto7playerelevator, eatpt7pe - enables auto teleport to a 7 player elevator (ONLY WORKS IN THE LOBBY)",
         "disableautoteleportto7playerelevator, datpt7pe - disables auto teleport to a 7 player elevator (ONLY WORKS IN THE LOBBY)",
         "enableautoteleporttogenerator2, eatptg2 - enables auto teleport to another generator upon extracting",
         "disableautoteleporttogenerator2, datptg2 - disables auto teleport to another generator upon extracting",
-        " ",
-        "(HP) teleporttogenerator, tptg - teleport to a generator",
-        "(HP) teleportto, to [target] - teleport to specified target",
         " ",
         "teleporttoadminroom, tptar - teleport to admin room (ONLY WORKS IN THE LOBBY)",
         "teleporttobedroom, tptbr - teleport to bedroom (ONLY WORKS IN THE LOBBY)",
@@ -187,7 +189,8 @@ config.commands = {
         "teleporttostage, tpts - teleport to the stage (ONLY WORKS IN THE LOBBY)",
         },
         ["Local Player"] = {
-        "enablegodmode, egm - makes it so when a twisted chases you it freezes them (UNRELIABLE)",
+        "offsettwisted, ot [x,z] - makes it so when a twisted chases you it offsets them according to your position by the specified values (UNRELIABLE)",
+        "restoretwisted, rt - restores your twisted position back to normal"
         " ",
         "removeanticheat, rac - removes anticheat (UNRELIABLE)",
         "bypassanticheat, bac - bypass anticheat (UNRELIABLE)",
@@ -200,7 +203,7 @@ config.commands = {
         " ",
         "enableautocalibration, eac - enables auto calibration",
         "disableautocalibration, dac - disables auto calibration",
-        "enableautocalibratio2n, eac2 - enables auto calibration v2",
+        "enableautocalibration2, eac2 - enables auto calibration v2",
         "disableautocalibration2, dac2 - disables auto calibration v2",
         " ",
         "enableantikick, eak - prevents localscripts from kicking you",
@@ -442,12 +445,18 @@ config.changelogs = {
     " ",
     "Command updates:",
     "- Added 2 'Main' commands. (noxiousgithub, riddancediscord)",
-    "- Added 2 'Local Player' commands. (enableloopmaxspeed, disableloopmaxspeed)",
-    "- Removed some commands that were patched ages ago.",
+    "- Added 4 'Local Player' commands. (enableloopmaxspeed, disableloopmaxspeed, offsettwisted, restoretwisted)",
+    "- Added 2 'Teleports / Travel' commands. (tweento, tweentoelevator)",
     " ",
+    "- Replaced 'Local Player' 'enablegodmode' command with 'offsettwisted' command.",
+    "- Renamed 'Teleports / Travel' 'teleporttogenerator' command to 'tweentogenerator' command.",
+    "- Fixed enableautocalibration2 not working on certain machine types."
+    "- Fixed some item usage commands not working for Bassie's 4th slot."
+    "- Removed some commands that were patched ages ago.",
     "Other:",
-    "- Fixed and optimised overall functionality.",
-    "- Added command count to information."
+    "- Fixed and EXTREMELY optimised overall functionality and references.",
+    "- Added command count to information.",
+    "- Renamed 'Teleports' tab to 'Teleports / Travel'."
 }
 config.information = {
     "Information:",
