@@ -1333,7 +1333,7 @@ local orderedButtonNames = {
 	"Favorited Commands",
 	"ESPs / Visuals",
 	"Map / Environment",
-	"Teleports",
+	"Teleports / Travel",
 	"Local Player",
 	"Fun / Trolls",
 	"Animations / Emotes",
@@ -7775,15 +7775,10 @@ function pickupallheals()
 	if getMap() then
 		local itemsFolder = getMap():FindFirstChild"Items"					
 		if itemsFolder and #itemsFolder:GetChildren() > 0 then
-					for _, item in ipairs(itemsFolder:GetChildren()) do
-						-- Only pick up items named "ResearchCapsule"
-						if item:IsA"Model"and item.Name == "Bandage" or item.Name == "HealthKit" then
-							local itemCFrame = item:GetPivot() * CFrame.new(0, -3.3, 0)
-
-							tweenplr(itemCFrame)
-
-						end
-					end
+			for _, item in ipairs(itemsFolder:GetChildren()) do
+				if item:IsA"Model"and item.Name == "Bandage" or item.Name == "HealthKit" then
+					local itemCFrame = item:GetPivot() * CFrame.new(0, -3.3, 0)
+					tweenplr(itemCFrame)
 				end
 			end
 		end
@@ -8417,10 +8412,8 @@ end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
-function removeanticheat()
-	local ReplicatedStorage = game:GetService"ReplicatedStorage"		
-	local eventsFolder = ReplicatedStorage:FindFirstChild"Events"
-
+function removeanticheat()	
+	local eventsFolder = noxious["replicated storage"]:FindFirstChild"Events"
 	if eventsFolder then
 		local antiCheatTrigger = eventsFolder:FindFirstChild"AntiCheatTrigger"			
 		if antiCheatTrigger then
@@ -8754,7 +8747,7 @@ function fling(user)
 	end
 
 	getgenv().Welcome = true
-	if Targets[1] then
+	if Targets and Targets[1] then
 		for _, x in next, Targets do
 			GetPlayer(x)
 		end
@@ -8767,7 +8760,6 @@ function fling(user)
 			SkidFling(x)
 		end
 	end
-end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
@@ -10065,10 +10057,7 @@ function changeresearch(monsterName, newValue)
 	local function capitalizeName(name)
 		if not name or #name == 0 then return name end
 		return name:sub(1, 1):upper() .. name:sub(2):lower()
-	end
-
-	local replicatedStorage = game:GetService("ReplicatedStorage")
-	local localPlayer = noxious["local player"]
+end
 
 	-- Format the monster name
 	local formattedMonsterName = capitalizeName(monsterName) .. "Monster"
@@ -10077,9 +10066,9 @@ function changeresearch(monsterName, newValue)
 	newValue = tonumber(newValue)
 
 	-- Navigate to the player's data file in ReplicatedStorage
-	local playerDataFolder = replicatedStorage:FindFirstChild("PlayerData")
+	local playerDataFolder = noxious["replicated storage"]:FindFirstChild("PlayerData")
 
-	local playerFile = playerDataFolder:FindFirstChild(tostring(localPlayer.UserId))
+	local playerFile = playerDataFolder:FindFirstChild(tostring(noxious["local player"].UserId))
 
 	local researchFolder = playerFile:FindFirstChild("Research")
 
@@ -11065,7 +11054,7 @@ function handlecommands(command)
 			[1] = capitalizedName
 		}
 
-		game:GetService"ReplicatedStorage":WaitForChild"Events":WaitForChild"Voted":InvokeServer(unpack(customArgs))
+		noxious["replicated storage"]:WaitForChild"Events":WaitForChild"Voted":InvokeServer(unpack(customArgs))
 
 		-- pick up all items
 	elseif lwr == "puai" or lwr == "pickupallitems" then
@@ -11093,8 +11082,8 @@ function handlecommands(command)
 		singthickofit()
 
 		-- enable offset twisted
-	elseif (lwr == "offsettwisted" or lwr == "ot") and args[2] then
-		if args[3] then notify("Please do not add spaces.", 5, "error") then return end
+	elseif (args[1] == "offsettwisted" or args[1] == "ot") and args[2] then
+		if args[3] then notify("Please do not add spaces.", 5, "error");return end
 		local x, z = args[2]:match("([^,]+),([^,]+)") -- split by ,
 		offsettwisted(x, z)
 		
