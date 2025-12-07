@@ -447,8 +447,8 @@ config.changelogs = {
     " ",
     "- Replaced 'Local Player' 'enablegodmode' command with 'offsettwisted' command.",
     "- Renamed 'Teleports / Travel' 'teleporttogenerator' command to 'tweentogenerator' command.",
-    "- Fixed 'enableautocalibration2' not working on certain machine types."
-    "- Fixed some item usage commands not working for Bassie's 4th slot."
+    "- Fixed 'enableautocalibration2' not working on certain machine types.",
+    "- Fixed some item usage commands not working for Bassie's 4th slot.",
     "- Removed some commands that were patched ages ago.",
     "Other:",
     "- Fixed and EXTREMELY optimised overall functionality and references.",
@@ -461,7 +461,7 @@ config.information = {
     "Noxious Hub: Dandy's World (Version " .. config.version .. ")",
     "Currently there are " .. config.commandcount .. " commands.",
     " ",
-    "A script used to enhance your experience when playing dandy's world.",
+    "A script used to enhance your experience when playing Dandy's World.",
     " ",
     "Think you've discovered a bug? Report it in our Discord server!",
     "Got any suggestions? Drop them in our Discord server!",
