@@ -11786,6 +11786,7 @@ end)
 
 -- Function to handle user input
 function handleUserInput(command)
+	local lwr = command:lower()
 	if lwr == "" then
 		notify("Unknown command or invalid arguments.", 5, "error")
 		return
