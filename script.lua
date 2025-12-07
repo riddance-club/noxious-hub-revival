@@ -9361,7 +9361,7 @@ function startTwistedsNotifyLoop()
 			twistedsMessageSent = false -- Reset the message sent flag
 		else
 			-- Collect all Twisteds
-			if getMap()
+			if getMap() then
 					local monstersFolder = getMap():FindFirstChild("Monsters")
 					if monstersFolder then
 						for _, monster in ipairs(monstersFolder:GetChildren()) do
