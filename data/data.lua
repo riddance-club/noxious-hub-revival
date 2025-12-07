@@ -446,7 +446,8 @@ config.changelogs = {
     "Other:",
     "- Fixed and EXTREMELY optimised overall functionality and references.",
     "- Added command count to information.",
-    "- Renamed 'Teleports' tab to 'Teleports / Travel'."
+    "- Renamed 'Teleports' tab to 'Teleports / Travel'.",
+    "- Implemented better error logging for commands."
 }
 config.information = {
     "Information:",
