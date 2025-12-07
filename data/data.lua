@@ -210,7 +210,7 @@ config.commands = {
         "enableautocalibration2, eac2 - enables auto calibration v2",
         "disableautocalibration2, dac2 - disables auto calibration v2",
         " ",
-        "forcestopgenerator, fsg - force stops generator even if a skill check is in progress"
+        "forcestopgenerator, fsg - force stops generator even if a skill check is in progress",
         "enableautoforcestopgenerator, eafsg - automatically forces generator to stop after being spotted even if a skill check is in progress",
         "disableautoforcestopgenerator, dafsg - disables auto force stop generator",
         " ",
