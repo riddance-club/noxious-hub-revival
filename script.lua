@@ -7432,6 +7432,32 @@ function teleportBehindPlayer(targetName)
 	end
 end
 
+function tweenBehindPlayer(targetName)
+	local targetPlayer
+	if targetName:lower() == "random" then
+		local players = noxious["players"]:GetPlayers()
+		if #players > 0 then
+			targetPlayer = players[math.random(1, #players)]
+		end
+	else
+		targetPlayer = findPlayerByPartialName(targetName)
+	end
+
+	if targetPlayer then
+		local targetCharacter = targetPlayer.Character
+		if targetCharacter and targetCharacter:FindFirstChild"HumanoidRootPart"then
+			spawn(function() disableNoclip() end)
+			spawn(function() enableNoclip() end)
+			spawn(function() bringplayerdown() end)
+			wait(0.2)
+			tweenplr(targetCharacter:GetPivot() * CFrame.new(0, -3.3, 3))
+			wait(0.2)
+			spawn(function() bringplayerup() end)
+			spawn(function() disableNoclip() end)
+		end
+	end
+end
+
 -------------------------------------------------------------------------------------------------------------------------------
 
 function checkIfShelly()
