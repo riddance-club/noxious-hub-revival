@@ -8609,7 +8609,7 @@ function enableorbittwisted(speed, range)
 			task.wait()
 		end
 	end)
-	noxious.ReplicatedStorage.Events.GetCharacterPosition.OnClientInvoke = function()
+	noxious["replicated storage"].Events.GetCharacterPosition.OnClientInvoke = function()
 		local pos = noxious["local character"]:GetPivot().Position
 		local x, z = math.cos(angle) * range, math.sin(angle) * range
 		return pos + Vector3.new(x, 0, z)
