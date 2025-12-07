@@ -190,9 +190,9 @@ config.commands = {
         },
         ["Local Player"] = {
         "offsettwisted, ot [x,z] - makes it so when a twisted chases you it offsets them according to your position by the specified values (UNRELIABLE)",
-        "leadtwisted, lt [target] - makes it so when a twisted chases you it starts making them chase the target's position instead",
-        "autoleadtwisted, alt - makes it so when a twisted chases you it starts making them chase the closest player's position instead"
-        "enableorbittwisted, eot [speed] [range] - makes it so when a twisted chases you it starts making them orbit around you with the specified rotation speed and range.",
+        "leadtwisted, lt [target] - makes it so when a twisted chases you it starts making them chase the target's position instead (UNRELIABLE)",
+        "autoleadtwisted, alt - makes it so when a twisted chases you it starts making them chase the closest player's position instead (UNRELIABLE)",
+        "enableorbittwisted, eot [speed] [range] - makes it so when a twisted chases you it starts making them orbit around you with the specified rotation speed and range. (UNRELIABLE)",
         "disableorbittwisted, dot - disables orbit twisted",
         "restoretwisted, rt - restores your twisted position back to normal",
         " ",
