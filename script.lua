@@ -9,13 +9,13 @@
 
 ---------------------------------------------------------------------------------------------------------------------------]]--
 
-if getgenv().dswdnoxiousloaded == true then getgenv().dswdnoxiousloaded = false;return end getgenv().dswdnoxiousloaded = true
-
--------------------------------------------------------------------------------------------------------------------------------
-
 local noxious = {}
 
 -------------------------------------------------------------------------------------------------------------------------------
+
+noxious["global env"] = getgenv() or _G
+
+if noxious["global env"].dswdnoxiousloaded == true then noxious["global env"].dswdnoxiousloaded = false;return end noxious["global env"].dswdnoxiousloaded = true
 
 noxious["dandy's world lobby"] = 16116270224
 noxious["dandy's world run"] = 16552821455
