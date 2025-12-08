@@ -459,7 +459,7 @@ config.changelogs = {
     "- Renamed 'Teleports' tab to 'Teleports / Travel'.",
     "- Implemented better error logging for commands.",
     "- Added (!) to some still incomplete commands.",
-},
+}
 config.information = {
     "Information:",
     " ",
@@ -498,7 +498,7 @@ config.information = {
     "[delay] = Amount of seconds before running the functionality of a loop (Number)",
     "[text] = Inputted text will run on the command",
     "[toon name] = A Toon from the Toon names",
-    "and so on..."
+    "and so on...",
     " ",
     "Player arguments (For commands, like the Fun / Trolls commands.):",
     " ",
