@@ -128,6 +128,22 @@ function teleportplr(cf)
 	workspace.Gravity = 196.2
 end
 
+function triggerbypass()
+	-- the game sometimes permits an temporary position change for some milliseconds before lagback which can give you enough time to trigger the below
+	while not noxious["local player"]:GetAttribute("isBeingTeleported") do -- this is an attribute the game uses to determine if the player is teleporting out of the elevator on to the map and also is triggered on the same time as bypass as otherwise the game wouldnt be permitted to teleport you out of elevator
+    	teleportplr(noxious["elevator cframe"] * CFrame.new(0 + math.random(), -1.5, -17.5 + math.random())) -- slightly being in the ground made it slightly better in my testing and the math.random also helps the bypass as the game has more luck of more milliseconds of permit while constantly slightly changing x and/or z
+    	task.wait()
+	end
+end
+
+function teleportbpplr(cf) -- bypass ver
+	triggerbypass()
+	for i = 1, 15 do -- the game wants a few teleports in a row as one wont really let you get to destination
+		teleportplr(cf)
+		task.wait()
+	end
+end
+
 function tweenplr(cf)
 	local duration = (noxious["local root"].Position - cf.Position).Magnitude / (noxious["local player"]:GetAttribute("KM_MAX_PLAYER_SPEED") * 1.25)
 	local tween = noxious["tween service"]:Create(noxious["local root"], TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), { CFrame = cf })
